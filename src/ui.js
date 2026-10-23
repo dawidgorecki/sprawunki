@@ -8,11 +8,13 @@ import { enableDragging } from './drag.js';
 const MESSAGE_DURATION_MS = 5000;
 
 // handlers: { onAdd(name), onToggle(itemId), onRename(itemId, name),
-//             onRemove(itemId), onMove(itemId, toIndex), onClearChecked() }
+//             onRemove(itemId), onMove(itemId, toIndex), onClearChecked(),
+//             onToggleWakeLock() }
 // Returns functions main.js uses to update the screen.
 export function createUI(handlers) {
   const elements = {
     progress: document.getElementById('progress'),
+    wakeLock: document.getElementById('wake-lock'),
     messageText: document.getElementById('message-text'),
     messageButton: document.getElementById('message-button'),
     emptyState: document.getElementById('empty-state'),
@@ -76,6 +78,8 @@ export function createUI(handlers) {
 
   enableDragging(elements.toBuyList, handlers.onMove);
 
+  elements.wakeLock.addEventListener('click', () => handlers.onToggleWakeLock());
+
   // No confirm() needed: the user can undo with "Cofnij" (spec 3.7 / 3.8).
   elements.clearChecked.addEventListener('click', () => handlers.onClearChecked());
 
@@ -132,6 +136,13 @@ export function createUI(handlers) {
       if (messageAction) {
         hideMessage();
       }
+    },
+
+    // Shows the wake lock switch (hidden until then) in the given state.
+    // aria-pressed makes it a toggle button: screen readers say "on" / "off".
+    updateWakeLockButton(enabled) {
+      elements.wakeLock.hidden = false;
+      elements.wakeLock.setAttribute('aria-pressed', String(enabled));
     },
 
     // Used when the user tries to add a product that is already on the list.

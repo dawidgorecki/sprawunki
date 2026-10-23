@@ -93,8 +93,7 @@ input {
 header {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
   /* safe-area-inset-top: room for the status bar / notch when installed as an app. */
   padding: calc(0.75rem + env(safe-area-inset-top)) 0.75rem 0.5rem;
 }
@@ -104,9 +103,43 @@ h1 {
   font-size: 1.5rem;
 }
 
+/* margin-left: auto pushes the progress and the wake lock switch to the right. */
 #progress {
-  margin: 0;
+  margin: 0 0 0 auto;
   color: var(--color-muted);
+}
+
+/* Wake lock switch (spec 9.3): outlined when off, filled with the accent when on. */
+#wake-lock {
+  align-self: center;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: none;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+/* When the progress is visible it already takes the free space on the left. */
+#progress:not([hidden]) + #wake-lock {
+  margin-left: 0;
+}
+
+#wake-lock[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+/* An element with its own display (grid above) would otherwise ignore the hidden attribute. */
+#wake-lock[hidden] {
+  display: none;
 }
 
 /* ---------- Sections and items ---------- */

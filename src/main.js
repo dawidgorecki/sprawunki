@@ -12,6 +12,7 @@ import {
 } from './store.js';
 import { loadState, saveState } from './storage.js';
 import { createUI } from './ui.js';
+import { isWakeLockSupported, createWakeLock } from './wake-lock.js';
 
 const LOAD_PROBLEM_MESSAGES = {
   corrupted:
@@ -32,6 +33,16 @@ function getStorage() {
     return null;
   }
 }
+
+// Created only where the browser supports it; otherwise the button stays hidden.
+const wakeLock = isWakeLockSupported()
+  ? createWakeLock({
+      onFailure() {
+        ui.updateWakeLockButton(false);
+        ui.showMessage('Nie udało się wyłączyć wygaszania ekranu.');
+      },
+    })
+  : null;
 
 const storage = getStorage();
 const loaded = loadState(storage, { now: Date.now(), listId: createId('l_') });
@@ -78,6 +89,12 @@ const ui = createUI({
   onClearChecked() {
     updateWithUndo(clearChecked(state), 'Wyczyszczono kupione produkty.');
   },
+
+  // Not part of the list state: the switch is not saved (spec 9.3).
+  async onToggleWakeLock() {
+    await wakeLock.setEnabled(!wakeLock.isEnabled());
+    ui.updateWakeLockButton(wakeLock.isEnabled());
+  },
 });
 
 // Like update(), but shows a message with "Cofnij" that brings back the state
@@ -103,6 +120,9 @@ function update(newState) {
 }
 
 ui.render(state);
+if (wakeLock) {
+  ui.updateWakeLockButton(false);
+}
 if (loaded.problem) {
   ui.showMessage(LOAD_PROBLEM_MESSAGES[loaded.problem], { persistent: true });
 }
