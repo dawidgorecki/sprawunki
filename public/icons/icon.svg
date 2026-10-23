@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Full-bleed square: Android crops it to a circle/squircle (maskable), iOS rounds the corners. -->
+  <rect width="512" height="512" fill="#2e7d32"/>
+  <!-- Artwork stays within the central "safe zone" so cropping never cuts it. -->
+  <g transform="translate(256 256) translate(-252 -281)">
+    <!-- Handle, frame and bottom rail of the cart -->
+    <path d="M112 168 H152 L196 340 H372" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Basket -->
+    <path d="M160 200 H404 L378 302 Q375 312 364 312 H189 Z" fill="#fff"/>
+    <!-- Wheels -->
+    <circle cx="212" cy="384" r="22" fill="#fff"/>
+    <circle cx="352" cy="384" r="22" fill="#fff"/>
+    <!-- Check mark cut into the basket -->
+    <path d="M232 254 L262 282 L318 228" fill="none" stroke="#2e7d32" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

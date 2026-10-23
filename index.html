@@ -12,6 +12,13 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
     />
     <title>Sprawunki</title>
+    <!-- Browser UI color (e.g. Android status bar), matching --color-bg in both themes. -->
+    <meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121411" media="(prefers-color-scheme: dark)" />
+    <!-- Paths starting with / get the /sprawunki/ base added by Vite. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- iOS ignores manifest icons and uses this one for "Add to Home Screen". -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
