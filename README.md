@@ -1,5 +1,7 @@
 # Sprawunki
 
+<img src="public/icons/icon-192.png" alt="Ikona aplikacji Sprawunki: biała torba na zakupy w ruchu na niebieskim tle" width="96" height="96">
+
 Sprawunki to prosta aplikacja webowa (PWA) do prowadzenia listy zakupów: w ciągu dnia dopisujesz produkty, w sklepie odhaczasz kupione, a po zakupach czyścisz listę. Ma być szybsza i prostsza w użyciu niż kartka papieru.
 
 **Aplikacja: https://dawidgorecki.github.io/sprawunki/**
@@ -12,7 +14,7 @@ Sprawunki to prosta aplikacja webowa (PWA) do prowadzenia listy zakupów: w cią
 - Edycja nazwy po tapnięciu, usuwanie jednym przyciskiem i „Wyczyść kupione”.
 - „Cofnij” po usunięciu produktu lub wyczyszczeniu kupionych.
 - Działanie offline po pierwszym uruchomieniu.
-- Tryb jasny i ciemny zgodnie z ustawieniami telefonu.
+- Tryb jasny i ciemny zgodnie z ustawieniami telefonu, w stonowanej niebieskiej kolorystyce.
 
 ## Instalacja na telefonie
 
@@ -56,6 +58,12 @@ src/
 public/            # favicon i ikony aplikacji
 tests/             # testy store.js i storage.js
 ```
+
+### Kolory i ikona
+
+Kolory są zdefiniowane jako zmienne CSS na początku `src/styles.css`, osobno dla trybu jasnego i ciemnego. Kolor akcentu (przyciski, zaznaczenia) to `#2f6f9e` w trybie jasnym i `#73b1d8` w ciemnym.
+
+Ikona to biała torba na zakupy w ruchu z małym ptaszkiem, na niebieskim tle w tej samej barwie co akcent. Projekt nie zawiera jej źródła wektorowego, tylko gotowe pliki PNG: `public/favicon.png` (64×64, zaokrąglone rogi) oraz `public/icons/icon-192.png`, `icon-512.png` i `apple-touch-icon.png` (180×180). Ikony 192 i 512 są też wariantem `maskable`, więc rysunek mieści się w środkowym kole, które Android zostawia po przycięciu.
 
 Pełna specyfikacja: [SPEC.md](SPEC.md).
 
