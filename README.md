@@ -8,8 +8,10 @@ Sprawunki to prosta aplikacja webowa (PWA) do prowadzenia listy zakupów: w cią
 
 ## Funkcje
 
-- Dodawanie produktów z pola na dole ekranu, w zasięgu kciuka. Ilość wpisujesz w nazwę, np. „mleko 2 l”.
-- Wykrywanie duplikatów: ponowne wpisanie produktu, który już jest na liście, nie dodaje go drugi raz. Jeśli był kupiony, wraca do „Do kupienia”.
+- Dodawanie produktów z pola na dole ekranu, w zasięgu kciuka. Ilość wpisujesz w nazwę, np. „mleko 2 l”, „6 jajek” albo „chleb x2”, a aplikacja pokazuje ją jako osobną etykietę.
+- Wykrywanie duplikatów bez względu na ilość: ponowne wpisanie produktu, który już jest na liście, nie dodaje go drugi raz. Wpis z nową ilością („mleko 3 l”) ją zmienia, a kupiony produkt wraca do „Do kupienia”.
+- Zmiana kolejności produktów do kupienia: przeciągnij za uchwyt ≡ albo użyj strzałek na klawiaturze.
+- Przełącznik w nagłówku, który nie pozwala ekranowi zgasnąć w trakcie zakupów (tam, gdzie przeglądarka to obsługuje).
 - Dwie sekcje, „Do kupienia” i „Kupione”, oraz licznik postępu, np. „3 z 8 kupione”.
 - Edycja nazwy po tapnięciu, usuwanie jednym przyciskiem i „Wyczyść kupione”.
 - „Cofnij” po usunięciu produktu lub wyczyszczeniu kupionych.
@@ -54,6 +56,8 @@ src/
   store.js         # logika listy: czyste funkcje, bez DOM i localStorage
   storage.js       # zapis i odczyt localStorage, migracje, kopia uszkodzonych danych
   ui.js            # renderowanie i obsługa zdarzeń
+  drag.js          # zmiana kolejności przeciąganiem (Pointer Events)
+  wake-lock.js     # blokada wygaszania ekranu (Screen Wake Lock API)
   styles.css
 public/            # favicon i ikony aplikacji
 tests/             # testy store.js i storage.js
