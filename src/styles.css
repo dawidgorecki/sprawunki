@@ -15,6 +15,8 @@
   --color-accent: #2f6f9e;
   --color-on-accent: #ffffff;
   --color-highlight: #ffe98a;
+  --color-quantity-bg: #e1edf6;
+  --color-quantity-text: #24577d;
   --color-message-bg: #1b1d21;
   --color-message-text: #ffffff;
 }
@@ -30,6 +32,8 @@
     --color-accent: #73b1d8;
     --color-on-accent: #0d1622;
     --color-highlight: #5e5418;
+    --color-quantity-bg: #22384a;
+    --color-quantity-text: #b4d6ec;
     --color-message-bg: #e6e9ef;
     --color-message-text: #1b1d21;
   }
@@ -226,8 +230,27 @@ li + li {
   cursor: pointer;
 }
 
+/* inline-block keeps "2 l" together on one line when a long name wraps. */
+.item-quantity {
+  display: inline-block;
+  margin-left: 0.25rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  background: var(--color-quantity-bg);
+  color: var(--color-quantity-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Line-through doesn't reach inline-block children, so the label stays readable, just faded. */
 li.checked .item-name {
   text-decoration: line-through;
+  color: var(--color-muted);
+}
+
+li.checked .item-quantity {
+  background: var(--color-bg);
   color: var(--color-muted);
 }
 

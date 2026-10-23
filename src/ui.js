@@ -2,7 +2,7 @@
 // or how the state changes: it draws the state it is given and reports user
 // actions to the handlers passed in from main.js.
 
-import { getActiveList, getSections, getProgress } from './store.js';
+import { getActiveList, getSections, getProgress, parseQuantity } from './store.js';
 
 const MESSAGE_DURATION_MS = 5000;
 
@@ -47,9 +47,11 @@ export function createUI(handlers) {
 
   main.addEventListener('click', (event) => {
     const itemId = event.target.closest('li')?.dataset.id;
+    // closest(), not matches(): the tap may land on the quantity label inside the name button.
+    const nameButton = event.target.closest('.item-name');
 
-    if (event.target.matches('.item-name')) {
-      startEditing(event.target, itemId, handlers.onRename);
+    if (nameButton) {
+      startEditing(nameButton, itemId, handlers.onRename);
     } else if (event.target.matches('.item-remove')) {
       handlers.onRemove(itemId);
     }
@@ -136,7 +138,8 @@ function startEditing(nameButton, itemId, onRename) {
   input.type = 'text';
   input.className = 'item-name-input';
   input.maxLength = 100;
-  input.value = nameButton.textContent;
+  // The full name as typed ("mleko 2 l"), not the button's text, which is split into parts.
+  input.value = nameButton.dataset.fullName;
   input.setAttribute('aria-label', 'Nazwa produktu');
 
   // Removing a focused field can fire "blur" in some browsers, which would
@@ -189,7 +192,7 @@ function render(elements, state) {
   elements.boughtList.replaceChildren(...bought.map(createItemElement));
 }
 
-// Builds: <li data-id> [checkbox] [name button] [remove button] </li>
+// Builds: <li data-id> [checkbox] [name button: name + quantity label] [remove button] </li>
 // All text goes through textContent or setAttribute, never innerHTML: the name is user input.
 function createItemElement(item) {
   const li = document.createElement('li');
@@ -208,7 +211,8 @@ function createItemElement(item) {
   const name = document.createElement('button');
   name.type = 'button';
   name.className = 'item-name';
-  name.textContent = item.name;
+  name.dataset.fullName = item.name;
+  name.append(...createNameParts(item.name));
   name.setAttribute('aria-label', `Edytuj: ${item.name}`);
 
   const remove = document.createElement('button');
@@ -219,6 +223,20 @@ function createItemElement(item) {
 
   li.append(checkbox, name, remove);
   return li;
+}
+
+// "mleko 2 l" → <span>mleko</span> <span class="item-quantity">2 l</span>
+function createNameParts(fullName) {
+  const { name, quantity } = parseQuantity(fullName);
+  const text = document.createElement('span');
+  text.textContent = name;
+  if (quantity === null) return [text];
+
+  const label = document.createElement('span');
+  label.className = 'item-quantity';
+  label.textContent = quantity;
+  // The space keeps the parts apart for screen readers and when copying text.
+  return [text, ' ', label];
 }
 
 function findItemElement(itemId) {
