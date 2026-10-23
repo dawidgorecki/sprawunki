@@ -6,32 +6,32 @@
   /* Tells the browser both themes are supported, so native controls and scrollbars match. */
   color-scheme: light dark;
 
-  --color-bg: #f5f6f3;
+  --color-bg: #f4f6f9;
   --color-surface: #ffffff;
-  --color-text: #1c1e1b;
-  --color-muted: #686d65;
-  --color-border: #dcdfd8;
-  --color-border-strong: #8b9187;
-  --color-accent: #2e7d32;
+  --color-text: #1b1d21;
+  --color-muted: #646b75;
+  --color-border: #d9dee5;
+  --color-border-strong: #87909c;
+  --color-accent: #2f6f9e;
   --color-on-accent: #ffffff;
   --color-highlight: #ffe98a;
-  --color-message-bg: #1c1e1b;
+  --color-message-bg: #1b1d21;
   --color-message-text: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #121411;
-    --color-surface: #1d201c;
-    --color-text: #e7e9e4;
-    --color-muted: #9ca297;
-    --color-border: #343832;
-    --color-border-strong: #7c8378;
-    --color-accent: #6abf6e;
-    --color-on-accent: #0f1a10;
+    --color-bg: #111318;
+    --color-surface: #1b1f26;
+    --color-text: #e6e9ef;
+    --color-muted: #9aa3ae;
+    --color-border: #323842;
+    --color-border-strong: #78818d;
+    --color-accent: #73b1d8;
+    --color-on-accent: #0d1622;
     --color-highlight: #5e5418;
-    --color-message-bg: #e7e9e4;
-    --color-message-text: #1c1e1b;
+    --color-message-bg: #e6e9ef;
+    --color-message-text: #1b1d21;
   }
 }
 

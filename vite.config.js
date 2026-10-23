@@ -14,7 +14,7 @@ export default defineConfig({
       // on update, which could interrupt someone in the middle of shopping.)
       injectRegister: 'script',
       // Public files not referenced from the code that must still work offline.
-      includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
+      includeAssets: ['favicon.png', 'icons/apple-touch-icon.png'],
       manifest: {
         name: 'Sprawunki — lista zakupów',
         short_name: 'Sprawunki',
@@ -24,8 +24,8 @@ export default defineConfig({
         start_url: '/sprawunki/',
         scope: '/sprawunki/',
         // Same as the page background (--color-bg), so the status bar blends in.
-        theme_color: '#f5f6f3',
-        background_color: '#f5f6f3',
+        theme_color: '#f4f6f9',
+        background_color: '#f4f6f9',
         // Paths are relative to the manifest file, which lives in /sprawunki/.
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
