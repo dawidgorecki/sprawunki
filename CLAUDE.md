@@ -1,0 +1,67 @@
+# CLAUDE.md
+
+Instrukcje dla Claude Code w tym projekcie.
+
+## Projekt
+
+**Sprawunki** — aplikacja PWA do listy zakupów: jedna lista, dodawanie, odhaczanie, edycja, usuwanie produktów; dane w localStorage; pełne działanie offline. **Pełna specyfikacja: `SPEC.md`. Przed każdym zadaniem sprawdź, czego dotyczy w specyfikacji.**
+
+Autor programuje zawodowo w PHP i zna podstawy JavaScriptu. Projekt służy też nauce, więc kod ma być czytelny i zrozumiały bez znajomości frameworków.
+
+## Stos
+
+- Vite (serwer deweloperski i build)
+- Czysty JavaScript, moduły ES. **Bez frameworków** (React, Vue, Alpine itd.) i bez TypeScriptu
+- vite-plugin-pwa (manifest i service worker)
+- Vitest (testy logiki)
+- Hosting: GitHub Pages przez GitHub Actions
+
+Zależności tylko jako `devDependencies`. Nie dodawaj nowych bibliotek bez pytania.
+
+## Polecenia
+
+```bash
+npm install        # instalacja
+npm run dev        # serwer deweloperski
+npm test           # testy (Vitest, jednorazowo)
+npm run build      # build do dist/
+npm run preview    # podgląd builda (tu działa service worker)
+```
+
+## Struktura
+
+```
+index.html
+src/
+  main.js        # start aplikacji: wczytanie danych, podpięcie UI
+  store.js       # logika listy — czyste funkcje, bez DOM i localStorage
+  storage.js     # odczyt/zapis localStorage, migracje, obsługa błędów
+  ui.js          # renderowanie i obsługa zdarzeń DOM
+  styles.css
+public/
+  icons/         # ikony PWA
+tests/
+  store.test.js
+  storage.test.js
+.github/workflows/deploy.yml
+```
+
+## Zasady kodu
+
+- **Rozdzielenie warstw:** `store.js` zawiera tylko czyste funkcje, które przyjmują stan i zwracają nowy stan (bez mutacji). Żadnego DOM ani localStorage w `store.js`. Dzięki temu logika jest testowalna.
+- **Renderowanie:** po każdej zmianie stanu zapisz go i wyrenderuj listę od nowa. Prosto, bez optymalizacji na zapas.
+- **Bezpieczeństwo:** tekst od użytkownika tylko przez `textContent`. Nigdy `innerHTML` z danymi użytkownika.
+- **Nazewnictwo:** kod, nazwy zmiennych i komentarze po angielsku; teksty w interfejsie po polsku.
+- **Model danych** zgodny z `SPEC.md` (punkt 4). Zachowaj strukturę przewidującą wiele list i kategorie, nawet jeśli w wersji 1 są nieużywane.
+- Proste, krótkie funkcje. Komentarz tam, gdzie decyzja nie jest oczywista.
+- CSS: zmienne dla kolorów, tryb ciemny przez `prefers-color-scheme`, układ mobile first.
+- Repozytorium nazywa się `sprawunki`; GitHub Pages serwuje aplikację spod `/sprawunki/`, więc w `vite.config.js` ustaw `base: '/sprawunki/'` i używaj ścieżek zgodnych z tym ustawieniem (także w manifeście PWA).
+- Nazwa w interfejsie: „Sprawunki”. Klucz localStorage: `sprawunki`.
+
+## Sposób pracy
+
+- Pracuj małymi krokami według punktu 7 w `SPEC.md`. Jeden krok = jedna logiczna zmiana.
+- Do każdej zmiany w `store.js` lub `storage.js` dodaj albo zaktualizuj testy. Po zmianie uruchom `npm test`.
+- Nie dodawaj funkcji spoza zakresu wersji 1 (punkt 6 w `SPEC.md`). Jeśli coś wydaje się potrzebne, zapytaj.
+- Gdy specyfikacja jest niejasna, zapytaj zamiast zgadywać.
+- Po zakończeniu kroku krótko wyjaśnij, co zmieniłeś i dlaczego (autor się uczy), oraz zaproponuj komunikat commita.

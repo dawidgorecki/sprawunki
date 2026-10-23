@@ -1,0 +1,5 @@
+node_modules/
+dist/
+
+# Windows metadata files created when copying files into WSL
+*:Zone.Identifier
