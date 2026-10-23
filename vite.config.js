@@ -5,7 +5,5 @@ export default defineConfig({
   base: '/sprawunki/',
   test: {
     include: ['tests/**/*.test.js'],
-    // No tests exist yet in step 1; remove once store tests are added
-    passWithNoTests: true,
   },
 });
