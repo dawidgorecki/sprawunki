@@ -3,6 +3,7 @@ import {
   MAX_NAME_LENGTH,
   createInitialState,
   normalizeName,
+  parseQuantity,
   getActiveList,
   addItem,
   toggleItem,
@@ -117,9 +118,68 @@ describe('addItem with a duplicate', () => {
     expect(items(state)[0].checkedAt).toBeNull();
   });
 
-  it('treats a name with an extra quantity as a different product', () => {
-    const result = addItem(stateWith('mleko'), 'mleko 2 l', { id: 'i_9', now: 5000 });
+  it('ignores the quantity when comparing names', () => {
+    const result = addItem(stateWith('mleko 2 l'), 'Mleko', { id: 'i_9', now: 5000 });
+    expect(result.status).toBe('duplicate');
+    expect(result.itemId).toBe('i_1');
+  });
+
+  it('replaces the name when the new entry has a quantity', () => {
+    const { state } = addItem(stateWith('mleko 2 l'), 'Mleko 3 l', { id: 'i_9', now: 5000 });
+    expect(names(items(state))).toEqual(['Mleko 3 l']);
+  });
+
+  it('adds a quantity to an item that had none', () => {
+    const { state } = addItem(stateWith('chleb'), 'chleb x2', { id: 'i_9', now: 5000 });
+    expect(names(items(state))).toEqual(['chleb x2']);
+  });
+
+  it('keeps the old name when the new entry has no quantity', () => {
+    const { state } = addItem(stateWith('mleko 2 l'), 'MLEKO', { id: 'i_9', now: 5000 });
+    expect(names(items(state))).toEqual(['mleko 2 l']);
+  });
+
+  it('treats different word forms as different products', () => {
+    const result = addItem(stateWith('mleko 2 l'), '2 l mleka', { id: 'i_9', now: 5000 });
     expect(result.status).toBe('added');
+  });
+});
+
+describe('parseQuantity', () => {
+  it.each([
+    ['mleko 2 l', 'mleko', '2 l'],
+    ['mleko 2l', 'mleko', '2l'],
+    ['ser 0,5 kg', 'ser', '0,5 kg'],
+    ['woda 1.5 L', 'woda', '1.5 L'],
+    ['jajka 10 szt.', 'jajka', '10 szt.'],
+    ['szynka 20 dag', 'szynka', '20 dag'],
+    ['chleb x2', 'chleb', 'x2'],
+    ['chleb 2x', 'chleb', '2x'],
+    ['chleb ×2', 'chleb', '×2'],
+    ['6 jajek', 'jajek', '6'],
+    ['2 l mleka', 'mleka', '2 l'],
+    ['2x chleb', 'chleb', '2x'],
+    ['2 lody', 'lody', '2'], // "l" is a unit only as a whole word
+    ['  mleko   2 l  ', 'mleko', '2 l'],
+  ])('reads "%s" as "%s" + "%s"', (input, name, quantity) => {
+    expect(parseQuantity(input)).toEqual({ name, quantity });
+  });
+
+  it.each([
+    'chleb',
+    'mąka typ 450', // bare number at the end is part of the name
+    'WD 40',
+    '2 l', // nothing left for the product name
+    '6',
+    'x2',
+    '100% sok',
+    'mleko 2 litry', // only the listed units
+  ])('finds no quantity in "%s"', (input) => {
+    expect(parseQuantity(input)).toEqual({ name: input, quantity: null });
+  });
+
+  it('reads only one quantity, the one at the end first', () => {
+    expect(parseQuantity('2 l mleko 1 l')).toEqual({ name: '2 l mleko', quantity: '1 l' });
   });
 });
 
@@ -173,6 +233,19 @@ describe('renameItem', () => {
     const result = renameItem(before, 'i_2', 'CHLEB');
     expect(result.status).toBe('duplicate');
     expect(result.state).toBe(before);
+  });
+
+  it('rejects a name that differs from another item only by quantity', () => {
+    const before = stateWith('chleb', 'mleko 2 l');
+    const result = renameItem(before, 'i_1', 'mleko 1 l');
+    expect(result.status).toBe('duplicate');
+    expect(result.state).toBe(before);
+  });
+
+  it('allows changing only the quantity of the same item', () => {
+    const result = renameItem(stateWith('mleko 2 l'), 'i_1', 'mleko 3 l');
+    expect(result.status).toBe('renamed');
+    expect(items(result.state)[0].name).toBe('mleko 3 l');
   });
 });
 
