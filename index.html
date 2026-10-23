@@ -47,7 +47,8 @@
       <div class="message">
         <!-- Live region: screen readers announce text put here. Kept in the DOM even when empty. -->
         <p id="message-text" role="status"></p>
-        <button type="button" id="message-close" hidden>OK</button>
+        <!-- "OK" for messages that stay until closed, "Cofnij" (undo) after removing. -->
+        <button type="button" id="message-button" hidden>OK</button>
       </div>
       <form id="add-form">
         <label for="new-item-name" class="visually-hidden">Nazwa produktu</label>

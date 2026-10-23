@@ -1,7 +1,14 @@
 // App entry point: loads the saved state, connects user actions to store.js
 // functions, and after every change saves and re-renders.
 
-import { addItem, toggleItem, renameItem, removeItem, clearChecked } from './store.js';
+import {
+  getActiveList,
+  addItem,
+  toggleItem,
+  renameItem,
+  removeItem,
+  clearChecked,
+} from './store.js';
 import { loadState, saveState } from './storage.js';
 import { createUI } from './ui.js';
 
@@ -55,15 +62,30 @@ const ui = createUI({
   },
 
   onRemove(itemId) {
-    update(removeItem(state, itemId));
+    const item = getActiveList(state).items.find((i) => i.id === itemId);
+    updateWithUndo(removeItem(state, itemId), `Usunięto: ${item.name}`);
   },
 
   onClearChecked() {
-    update(clearChecked(state));
+    updateWithUndo(clearChecked(state), 'Wyczyszczono kupione produkty.');
   },
 });
 
+// Like update(), but shows a message with "Cofnij" that brings back the state
+// from before this change. State objects are never mutated (see store.js),
+// so keeping a reference to the old one is enough to restore it.
+function updateWithUndo(newState, message) {
+  const previousState = state;
+  update(newState);
+  ui.showMessage(message, {
+    action: { label: 'Cofnij', onClick: () => update(previousState) },
+  });
+}
+
 function update(newState) {
+  // Any change makes an earlier "Cofnij" outdated: undoing it now would also
+  // throw away this change.
+  ui.dismissAction();
   state = newState;
   if (!saveState(storage, state)) {
     ui.showMessage('Nie udało się zapisać listy.', { persistent: true });

@@ -13,7 +13,7 @@ export function createUI(handlers) {
   const elements = {
     progress: document.getElementById('progress'),
     messageText: document.getElementById('message-text'),
-    messageClose: document.getElementById('message-close'),
+    messageButton: document.getElementById('message-button'),
     emptyState: document.getElementById('empty-state'),
     toBuySection: document.getElementById('to-buy-section'),
     toBuyList: document.getElementById('to-buy-list'),
@@ -55,25 +55,34 @@ export function createUI(handlers) {
     }
   });
 
-  elements.clearChecked.addEventListener('click', () => {
-    // Native confirm() as required by the spec until "Cofnij" (undo) exists.
-    if (confirm('Usunąć wszystkie kupione produkty z listy?')) {
-      handlers.onClearChecked();
-    }
-  });
+  // No confirm() needed: the user can undo with "Cofnij" (spec 3.7 / 3.8).
+  elements.clearChecked.addEventListener('click', () => handlers.onClearChecked());
 
   let messageTimer = null;
+  // Function run by the message button (e.g. undo), or null for a plain "OK".
+  let messageAction = null;
 
   function hideMessage() {
     clearTimeout(messageTimer);
+    messageAction = null;
     elements.messageText.textContent = '';
-    elements.messageClose.hidden = true;
+    elements.messageButton.hidden = true;
   }
 
-  elements.messageClose.addEventListener('click', () => {
+  elements.messageButton.addEventListener('click', () => {
+    const action = messageAction;
+    // :focus-visible is true only when the button was reached with the keyboard.
+    // Checked before hiding, because a hidden button loses focus.
+    const usedKeyboard = elements.messageButton.matches(':focus-visible');
+
     hideMessage();
-    // The focused button just disappeared; move focus somewhere useful.
-    elements.nameInput.focus();
+    action?.();
+
+    // The focused button just disappeared; move focus somewhere useful. Skipped
+    // after a tap, because focusing the field would pop up the phone keyboard.
+    if (usedKeyboard) {
+      elements.nameInput.focus();
+    }
   });
 
   return {
@@ -81,14 +90,26 @@ export function createUI(handlers) {
       render(elements, state);
     },
 
-    // A persistent message stays until the user closes it with "OK"; use it for
-    // problems the user must not miss. Others disappear on their own.
-    showMessage(text, { persistent = false } = {}) {
+    // persistent: the message stays until the user closes it with "OK"; use it for
+    //   problems the user must not miss. Other messages disappear on their own.
+    // action: { label, onClick } shows a button that runs onClick, e.g. "Cofnij".
+    showMessage(text, { persistent = false, action = null } = {}) {
       clearTimeout(messageTimer);
+      messageAction = action?.onClick ?? null;
       elements.messageText.textContent = text;
-      elements.messageClose.hidden = !persistent;
+      elements.messageButton.textContent = action?.label ?? 'OK';
+      elements.messageButton.hidden = !persistent && !action;
       if (!persistent) {
         messageTimer = setTimeout(hideMessage, MESSAGE_DURATION_MS);
+      }
+    },
+
+    // Hides the message only if it offers an action. After any other change an
+    // old "Cofnij" would restore an outdated state, so it must go. Plain
+    // messages (e.g. a storage error) stay.
+    dismissAction() {
+      if (messageAction) {
+        hideMessage();
       }
     },
 
