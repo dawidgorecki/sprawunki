@@ -7,6 +7,7 @@ import {
   toggleItem,
   renameItem,
   removeItem,
+  moveItem,
   clearChecked,
 } from './store.js';
 import { loadState, saveState } from './storage.js';
@@ -64,6 +65,14 @@ const ui = createUI({
   onRemove(itemId) {
     const item = getActiveList(state).items.find((i) => i.id === itemId);
     updateWithUndo(removeItem(state, itemId), `Usunięto: ${item.name}`);
+  },
+
+  onMove(itemId, toIndex) {
+    const newState = moveItem(state, itemId, toIndex);
+    // Same state means nothing moved (e.g. ArrowUp on the top item): skip saving.
+    if (newState !== state) {
+      update(newState);
+    }
   },
 
   onClearChecked() {

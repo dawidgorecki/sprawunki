@@ -7,7 +7,7 @@ import { getActiveList, getSections, getProgress, parseQuantity } from './store.
 const MESSAGE_DURATION_MS = 5000;
 
 // handlers: { onAdd(name), onToggle(itemId), onRename(itemId, name),
-//             onRemove(itemId), onClearChecked() }
+//             onRemove(itemId), onMove(itemId, toIndex), onClearChecked() }
 // Returns functions main.js uses to update the screen.
 export function createUI(handlers) {
   const elements = {
@@ -55,6 +55,22 @@ export function createUI(handlers) {
     } else if (event.target.matches('.item-remove')) {
       handlers.onRemove(itemId);
     }
+  });
+
+  // Arrow keys on a reorder handle move the item one place up or down (spec 9.2).
+  main.addEventListener('keydown', (event) => {
+    if (!event.target.matches('.item-handle')) return;
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+
+    event.preventDefault(); // otherwise the arrow keys also scroll the page
+    const li = event.target.closest('li');
+    // The position on screen is the position within "to buy", which moveItem expects.
+    const index = [...elements.toBuyList.children].indexOf(li);
+    const toIndex = event.key === 'ArrowUp' ? index - 1 : index + 1;
+
+    handlers.onMove(li.dataset.id, toIndex);
+    // Render replaced the handle with a new element; keep keyboard focus on it.
+    findItemElement(li.dataset.id)?.querySelector('.item-handle').focus();
   });
 
   // No confirm() needed: the user can undo with "Cofnij" (spec 3.7 / 3.8).
@@ -192,7 +208,8 @@ function render(elements, state) {
   elements.boughtList.replaceChildren(...bought.map(createItemElement));
 }
 
-// Builds: <li data-id> [checkbox] [name button: name + quantity label] [remove button] </li>
+// Builds: <li data-id> [handle] [checkbox] [name button: name + quantity label] [remove button] </li>
+// The reorder handle is only on "to buy" items (spec 9.2).
 // All text goes through textContent or setAttribute, never innerHTML: the name is user input.
 function createItemElement(item) {
   const li = document.createElement('li');
@@ -221,8 +238,21 @@ function createItemElement(item) {
   remove.textContent = '×';
   remove.setAttribute('aria-label', `Usuń: ${item.name}`);
 
+  if (!item.checked) {
+    li.append(createHandle(item));
+  }
   li.append(checkbox, name, remove);
   return li;
+}
+
+function createHandle(item) {
+  const handle = document.createElement('button');
+  handle.type = 'button';
+  handle.className = 'item-handle';
+  handle.textContent = '≡';
+  handle.setAttribute('aria-label', `Zmień kolejność: ${item.name}`);
+  handle.setAttribute('aria-describedby', 'move-hint');
+  return handle;
 }
 
 // "mleko 2 l" → <span>mleko</span> <span class="item-quantity">2 l</span>
