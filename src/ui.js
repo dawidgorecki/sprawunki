@@ -6,7 +6,8 @@ import { getActiveList, getSections, getProgress } from './store.js';
 
 const MESSAGE_DURATION_MS = 5000;
 
-// handlers: { onAdd(name), onToggle(itemId) }
+// handlers: { onAdd(name), onToggle(itemId), onRename(itemId, name),
+//             onRemove(itemId), onClearChecked() }
 // Returns functions main.js uses to update the screen.
 export function createUI(handlers) {
   const elements = {
@@ -18,6 +19,7 @@ export function createUI(handlers) {
     toBuyList: document.getElementById('to-buy-list'),
     boughtSection: document.getElementById('bought-section'),
     boughtList: document.getElementById('bought-list'),
+    clearChecked: document.getElementById('clear-checked'),
     addForm: document.getElementById('add-form'),
     nameInput: document.getElementById('new-item-name'),
   };
@@ -30,15 +32,34 @@ export function createUI(handlers) {
     elements.nameInput.focus();
   });
 
-  // One listener on <main> instead of one per checkbox. The list is rebuilt on
+  // One listener on <main> instead of one per item. The list is rebuilt on
   // every render, so listeners attached to items would be thrown away anyway.
-  document.querySelector('main').addEventListener('change', (event) => {
-    if (!event.target.matches('input[type="checkbox"]')) return;
+  const main = document.querySelector('main');
+
+  main.addEventListener('change', (event) => {
+    if (!event.target.matches('.item-checkbox')) return;
 
     const itemId = event.target.closest('li').dataset.id;
     handlers.onToggle(itemId);
     // Render replaced the checkbox with a new element; keep keyboard focus on it.
-    findItemElement(itemId)?.querySelector('input[type="checkbox"]').focus();
+    findItemElement(itemId)?.querySelector('.item-checkbox').focus();
+  });
+
+  main.addEventListener('click', (event) => {
+    const itemId = event.target.closest('li')?.dataset.id;
+
+    if (event.target.matches('.item-name')) {
+      startEditing(event.target, itemId, handlers.onRename);
+    } else if (event.target.matches('.item-remove')) {
+      handlers.onRemove(itemId);
+    }
+  });
+
+  elements.clearChecked.addEventListener('click', () => {
+    // Native confirm() as required by the spec until "Cofnij" (undo) exists.
+    if (confirm('Usunąć wszystkie kupione produkty z listy?')) {
+      handlers.onClearChecked();
+    }
   });
 
   let messageTimer = null;
@@ -85,6 +106,51 @@ export function createUI(handlers) {
   };
 }
 
+// Swaps the name button for a text field. Enter or leaving the field saves,
+// Escape cancels. The button is always put back first; if the rename succeeds,
+// the following render replaces it with the new name anyway. This way a
+// rejected name (empty, duplicate) needs no extra code to restore.
+function startEditing(nameButton, itemId, onRename) {
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'item-name-input';
+  input.maxLength = 100;
+  input.value = nameButton.textContent;
+  input.setAttribute('aria-label', 'Nazwa produktu');
+
+  // Removing a focused field can fire "blur" in some browsers, which would
+  // finish the edit a second time. This flag makes finishing happen only once.
+  let finished = false;
+
+  function finish({ save, keepFocus }) {
+    if (finished) return;
+    finished = true;
+
+    input.replaceWith(nameButton);
+    if (save) {
+      onRename(itemId, input.value);
+    }
+    if (keepFocus) {
+      findItemElement(itemId)?.querySelector('.item-name').focus();
+    }
+  }
+
+  input.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== 'Escape') return;
+
+    // finish() moves focus to the name button. Without preventDefault the same
+    // Enter key press would then "click" that button and reopen the editor.
+    event.preventDefault();
+    finish({ save: event.key === 'Enter', keepFocus: true });
+  });
+  // Tapping elsewhere: save, but don't pull focus back from where the user went.
+  input.addEventListener('blur', () => finish({ save: true, keepFocus: false }));
+
+  nameButton.replaceWith(input);
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length); // cursor at the end
+}
+
 function render(elements, state) {
   const list = getActiveList(state);
   const { toBuy, bought } = getSections(list);
@@ -97,10 +163,13 @@ function render(elements, state) {
   elements.toBuySection.hidden = toBuy.length === 0;
   elements.toBuyList.replaceChildren(...toBuy.map(createItemElement));
 
+  // "Wyczyść kupione" is inside this section, so it is visible only when there are bought items.
   elements.boughtSection.hidden = bought.length === 0;
   elements.boughtList.replaceChildren(...bought.map(createItemElement));
 }
 
+// Builds: <li data-id> [checkbox] [name button] [remove button] </li>
+// All text goes through textContent or setAttribute, never innerHTML: the name is user input.
 function createItemElement(item) {
   const li = document.createElement('li');
   li.dataset.id = item.id;
@@ -108,16 +177,26 @@ function createItemElement(item) {
 
   const checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
+  checkbox.className = 'item-checkbox';
   checkbox.checked = item.checked;
-  // Not wrapped in a <label>: in step 5 tapping the name will start editing,
-  // so it must not toggle the checkbox. aria-label gives screen readers the name.
+  // Not wrapped in a <label>: tapping the name starts editing, so it must not
+  // toggle the checkbox. aria-label gives screen readers the name instead.
   checkbox.setAttribute('aria-label', item.name);
 
-  const name = document.createElement('span');
+  // A real <button>, so the name can be reached with Tab and edited with Enter.
+  const name = document.createElement('button');
+  name.type = 'button';
   name.className = 'item-name';
-  name.textContent = item.name; // never innerHTML: the name is user input
+  name.textContent = item.name;
+  name.setAttribute('aria-label', `Edytuj: ${item.name}`);
 
-  li.append(checkbox, name);
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'item-remove';
+  remove.textContent = '×';
+  remove.setAttribute('aria-label', `Usuń: ${item.name}`);
+
+  li.append(checkbox, name, remove);
   return li;
 }
 

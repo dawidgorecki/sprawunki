@@ -1,7 +1,7 @@
 // App entry point: loads the saved state, connects user actions to store.js
 // functions, and after every change saves and re-renders.
 
-import { addItem, toggleItem } from './store.js';
+import { addItem, toggleItem, renameItem, removeItem, clearChecked } from './store.js';
 import { loadState, saveState } from './storage.js';
 import { createUI } from './ui.js';
 
@@ -42,6 +42,24 @@ const ui = createUI({
 
   onToggle(itemId) {
     update(toggleItem(state, itemId, Date.now()));
+  },
+
+  // On 'empty' the UI has already restored the old name, so there is nothing to do.
+  onRename(itemId, name) {
+    const result = renameItem(state, itemId, name);
+    if (result.status === 'renamed') {
+      update(result.state);
+    } else if (result.status === 'duplicate') {
+      ui.showMessage('Taki produkt już jest na liście.');
+    }
+  },
+
+  onRemove(itemId) {
+    update(removeItem(state, itemId));
+  },
+
+  onClearChecked() {
+    update(clearChecked(state));
   },
 });
 
