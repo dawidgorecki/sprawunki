@@ -4,7 +4,7 @@ Instrukcje dla Claude Code w tym projekcie.
 
 ## Projekt
 
-**Sprawunki** — aplikacja PWA do listy zakupów: jedna lista, dodawanie, odhaczanie, edycja, usuwanie produktów; dane w localStorage; pełne działanie offline. **Pełna specyfikacja: `SPEC.md`. Przed każdym zadaniem sprawdź, czego dotyczy w specyfikacji.**
+**Sprawunki** — aplikacja PWA do listy zakupów: jedna lista, dodawanie, odhaczanie, edycja, usuwanie produktów; w wersji 1.1 także parsowanie ilości, zmiana kolejności przeciąganiem i blokada wygaszania ekranu; dane w localStorage; pełne działanie offline. **Pełna specyfikacja: `SPEC.md`. Przed każdym zadaniem sprawdź, czego dotyczy w specyfikacji.**
 
 Autor programuje zawodowo w PHP i zna podstawy JavaScriptu. Projekt służy też nauce, więc kod ma być czytelny i zrozumiały bez znajomości frameworków.
 
@@ -37,6 +37,7 @@ src/
   store.js       # logika listy — czyste funkcje, bez DOM i localStorage
   storage.js     # odczyt/zapis localStorage, migracje, obsługa błędów
   ui.js          # renderowanie i obsługa zdarzeń DOM
+  wake-lock.js   # blokada wygaszania ekranu (wersja 1.1)
   styles.css
 public/
   icons/         # ikony PWA
@@ -60,8 +61,8 @@ tests/
 
 ## Sposób pracy
 
-- Pracuj małymi krokami według punktu 7 w `SPEC.md`. Jeden krok = jedna logiczna zmiana.
+- Pracuj małymi krokami według kolejności implementacji w `SPEC.md` (obecnie punkt 9.4 — wersja 1.1). Jeden krok = jedna logiczna zmiana.
 - Do każdej zmiany w `store.js` lub `storage.js` dodaj albo zaktualizuj testy. Po zmianie uruchom `npm test`.
-- Nie dodawaj funkcji spoza zakresu wersji 1 (punkt 6 w `SPEC.md`). Jeśli coś wydaje się potrzebne, zapytaj.
+- Nie dodawaj funkcji spoza zakresu wersji 1 i 1.1 (punkty 3 i 9 w `SPEC.md`; to, co poza zakresem, opisuje punkt 6). Jeśli coś wydaje się potrzebne, zapytaj.
 - Gdy specyfikacja jest niejasna, zapytaj zamiast zgadywać.
 - Po zakończeniu kroku krótko wyjaśnij, co zmieniłeś i dlaczego (autor się uczy), oraz zaproponuj komunikat commita.
