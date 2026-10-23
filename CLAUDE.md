@@ -37,6 +37,7 @@ src/
   store.js       # logika listy — czyste funkcje, bez DOM i localStorage
   storage.js     # odczyt/zapis localStorage, migracje, obsługa błędów
   ui.js          # renderowanie i obsługa zdarzeń DOM
+  drag.js        # zmiana kolejności przeciąganiem (wersja 1.1)
   wake-lock.js   # blokada wygaszania ekranu (wersja 1.1)
   styles.css
 public/

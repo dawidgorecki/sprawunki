@@ -3,6 +3,7 @@
 // actions to the handlers passed in from main.js.
 
 import { getActiveList, getSections, getProgress, parseQuantity } from './store.js';
+import { enableDragging } from './drag.js';
 
 const MESSAGE_DURATION_MS = 5000;
 
@@ -72,6 +73,8 @@ export function createUI(handlers) {
     // Render replaced the handle with a new element; keep keyboard focus on it.
     findItemElement(li.dataset.id)?.querySelector('.item-handle').focus();
   });
+
+  enableDragging(elements.toBuyList, handlers.onMove);
 
   // No confirm() needed: the user can undo with "Cofnij" (spec 3.7 / 3.8).
   elements.clearChecked.addEventListener('click', () => handlers.onClearChecked());

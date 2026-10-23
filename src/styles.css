@@ -203,6 +203,42 @@ li + li {
   font-size: 1.375rem;
   line-height: 1;
   cursor: grab;
+  /* The finger on the handle drags the item instead of scrolling the page. */
+  touch-action: none;
+  /* iOS: no "copy / look up" menu on a long press. */
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* Items stepping aside while another one is dragged past them. */
+#to-buy-list li {
+  transition: transform 150ms ease;
+}
+
+/* The dragged item follows the finger directly, so no transition here. Its own
+   background covers the items it passes over. */
+#to-buy-list li.dragging {
+  position: relative;
+  z-index: 1;
+  background: var(--color-surface);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.25);
+  transition: none;
+}
+
+/* No text selection while dragging with a mouse. */
+body.is-dragging {
+  user-select: none;
+  cursor: grabbing;
+}
+
+body.is-dragging .item-handle {
+  cursor: grabbing;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #to-buy-list li {
+    transition: none;
+  }
 }
 
 /* Right after the handle the checkbox needs no extra gap. */
