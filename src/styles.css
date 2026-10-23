@@ -1,4 +1,34 @@
+/* Minimal styles needed for step 4. Full mobile layout and dark mode come in step 6. */
+
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
+}
+
+/* Hidden on screen, but still read by screen readers. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+li.checked .item-name {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+li.highlight {
+  animation: highlight 1.5s ease-out;
+}
+
+@keyframes highlight {
+  from {
+    background-color: #ffe58a;
+  }
+  to {
+    background-color: transparent;
+  }
 }

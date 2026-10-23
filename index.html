@@ -7,9 +7,44 @@
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <main id="app">
+    <header>
       <h1>Sprawunki</h1>
+      <p id="progress" hidden></p>
+    </header>
+
+    <div class="message">
+      <!-- Live region: screen readers announce text put here. Kept in the DOM even when empty. -->
+      <p id="message-text" role="status"></p>
+      <button type="button" id="message-close" hidden>OK</button>
+    </div>
+
+    <main>
+      <p id="empty-state" hidden>Lista jest pusta. Dopisz pierwszy produkt poniżej.</p>
+
+      <section id="to-buy-section" hidden>
+        <h2>Do kupienia</h2>
+        <ul id="to-buy-list"></ul>
+      </section>
+
+      <section id="bought-section" hidden>
+        <h2>Kupione</h2>
+        <ul id="bought-list"></ul>
+      </section>
     </main>
+
+    <form id="add-form">
+      <label for="new-item-name" class="visually-hidden">Nazwa produktu</label>
+      <input
+        id="new-item-name"
+        type="text"
+        maxlength="100"
+        autocomplete="off"
+        enterkeyhint="done"
+        placeholder="np. mleko 2 l"
+      />
+      <button type="submit">Dodaj</button>
+    </form>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
