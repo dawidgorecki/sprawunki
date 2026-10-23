@@ -10,6 +10,7 @@ import {
   renameItem,
   removeItem,
   clearChecked,
+  moveItem,
   getSections,
   getProgress,
 } from '../src/store.js';
@@ -266,10 +267,98 @@ describe('clearChecked', () => {
   });
 });
 
+describe('moveItem', () => {
+  // Returns the "to buy" names in the order shown on screen.
+  function toBuyNames(state) {
+    return names(getSections(getActiveList(state)).toBuy);
+  }
+
+  it('moves an item up', () => {
+    const state = moveItem(stateWith('chleb', 'mleko', 'masło'), 'i_3', 0);
+    expect(toBuyNames(state)).toEqual(['masło', 'chleb', 'mleko']);
+  });
+
+  it('moves an item down', () => {
+    const state = moveItem(stateWith('chleb', 'mleko', 'masło'), 'i_1', 1);
+    expect(toBuyNames(state)).toEqual(['mleko', 'chleb', 'masło']);
+  });
+
+  it('treats an index past either end as the top or the bottom', () => {
+    const start = stateWith('chleb', 'mleko', 'masło');
+    expect(toBuyNames(moveItem(start, 'i_2', -5))).toEqual(['mleko', 'chleb', 'masło']);
+    expect(toBuyNames(moveItem(start, 'i_2', 99))).toEqual(['chleb', 'masło', 'mleko']);
+  });
+
+  it('returns the same state when the position does not change', () => {
+    const before = stateWith('chleb', 'mleko');
+    expect(moveItem(before, 'i_1', 0)).toBe(before);
+  });
+
+  it('returns the same state for a bought or unknown item', () => {
+    const before = toggleItem(stateWith('chleb', 'mleko'), 'i_1', 9000);
+    expect(moveItem(before, 'i_1', 1)).toBe(before);
+    expect(moveItem(before, 'i_404', 0)).toBe(before);
+  });
+
+  it('counts the position among "to buy" items only, skipping bought ones', () => {
+    let state = stateWith('chleb', 'mleko', 'masło', 'ser');
+    state = toggleItem(state, 'i_2', 9000); // "to buy": chleb, masło, ser
+    state = moveItem(state, 'i_4', 1);
+    expect(toBuyNames(state)).toEqual(['chleb', 'ser', 'masło']);
+  });
+
+  it('keeps bought items in their array slots', () => {
+    let state = stateWith('chleb', 'mleko', 'masło');
+    state = toggleItem(state, 'i_2', 9000);
+    state = moveItem(state, 'i_3', 0);
+    expect(names(items(state))).toEqual(['masło', 'mleko', 'chleb']);
+  });
+
+  it('returns an unchecked item to its place in the manual order', () => {
+    let state = stateWith('chleb', 'mleko', 'masło');
+    state = moveItem(state, 'i_3', 0); // masło, chleb, mleko
+    state = toggleItem(state, 'i_1', 9000);
+    state = toggleItem(state, 'i_1', 9100);
+    expect(toBuyNames(state)).toEqual(['masło', 'chleb', 'mleko']);
+  });
+
+  it('adds new items at the bottom after a move', () => {
+    let state = moveItem(stateWith('chleb', 'mleko'), 'i_2', 0);
+    state = addItem(state, 'ser', { id: 'i_9', now: 9000 }).state;
+    expect(toBuyNames(state)).toEqual(['mleko', 'chleb', 'ser']);
+  });
+
+  it('does not mutate the previous state', () => {
+    const before = stateWith('chleb', 'mleko');
+    const snapshot = structuredClone(before);
+    moveItem(before, 'i_2', 0);
+    expect(before).toEqual(snapshot);
+  });
+});
+
 describe('getSections', () => {
   it('orders "to buy" by creation, oldest first', () => {
     const { toBuy } = getSections(getActiveList(stateWith('chleb', 'mleko', 'masło')));
     expect(names(toBuy)).toEqual(['chleb', 'mleko', 'masło']);
+  });
+
+  it('orders "to buy" by the items array, not by creation time', () => {
+    const state = moveItem(stateWith('chleb', 'mleko', 'masło'), 'i_3', 0);
+    const { toBuy } = getSections(getActiveList(state));
+    expect(names(toBuy)).toEqual(['masło', 'chleb', 'mleko']);
+  });
+
+  it('keeps version 1 data in the order it was added', () => {
+    // Version 1 always appended new items, so the array is already sorted by createdAt.
+    const list = {
+      id: 'l_1',
+      name: 'Zakupy',
+      items: [
+        { id: 'i_1', name: 'chleb', checked: false, createdAt: 1000, checkedAt: null, categoryId: null },
+        { id: 'i_2', name: 'mleko', checked: false, createdAt: 2000, checkedAt: null, categoryId: null },
+      ],
+    };
+    expect(names(getSections(list).toBuy)).toEqual(['chleb', 'mleko']);
   });
 
   it('orders "bought" by check time, most recent first', () => {

@@ -164,13 +164,37 @@ export function clearChecked(state) {
   return updateActiveItems(state, (items) => items.filter((item) => !item.checked));
 }
 
+// Moves an item to position toIndex within "to buy" (0 = top). Bought items keep
+// their places in the array, so an item unchecked later returns where it was.
+// Returns the same state when nothing moves (bought or unknown item, same position).
+export function moveItem(state, itemId, toIndex) {
+  const items = getActiveList(state).items;
+  const toBuy = items.filter((item) => !item.checked);
+  const fromIndex = toBuy.findIndex((item) => item.id === itemId);
+  if (fromIndex === -1) return state;
+
+  // An index past either end means "to the top" or "to the bottom".
+  const targetIndex = Math.max(0, Math.min(toIndex, toBuy.length - 1));
+  if (targetIndex === fromIndex) return state;
+
+  const reordered = [...toBuy];
+  const [moved] = reordered.splice(fromIndex, 1);
+  reordered.splice(targetIndex, 0, moved);
+
+  // Put the reordered "to buy" items back into the slots that "to buy" items
+  // used before, leaving every bought item exactly where it was.
+  let next = 0;
+  return updateActiveItems(state, () =>
+    items.map((item) => (item.checked ? item : reordered[next++])),
+  );
+}
+
 // Splits items into the two sections shown on screen:
-// "to buy" in the order they were added (newest last),
+// "to buy" in the order of the items array: the order they were added
+// (newest last), unless the user moved them (spec 9.2);
 // "bought" with the most recently checked first.
 export function getSections(list) {
-  const toBuy = list.items
-    .filter((item) => !item.checked)
-    .sort((a, b) => a.createdAt - b.createdAt);
+  const toBuy = list.items.filter((item) => !item.checked);
   const bought = list.items
     .filter((item) => item.checked)
     .sort((a, b) => b.checkedAt - a.checkedAt);
