@@ -117,13 +117,16 @@ function startDrag(list, handle, startEvent, onMove) {
   }
 }
 
-// The dragged item takes the place of the farthest item whose middle it has passed.
+// The dragged item takes the place of the farthest item whose middle it has reached.
+// "Reached" includes equal (<=, >=): at the very top or bottom the shift is clamped,
+// which puts the dragged middle exactly on the first or last item's middle. With
+// strict < and > the first and last places could never be reached by dragging.
 function findTargetIndex(boxes, fromIndex, draggedCenter) {
   let target = fromIndex;
   boxes.forEach((box, index) => {
     const center = box.top + box.height / 2;
-    if (index < fromIndex && draggedCenter < center) target = Math.min(target, index);
-    if (index > fromIndex && draggedCenter > center) target = Math.max(target, index);
+    if (index < fromIndex && draggedCenter <= center) target = Math.min(target, index);
+    if (index > fromIndex && draggedCenter >= center) target = Math.max(target, index);
   });
   return target;
 }
