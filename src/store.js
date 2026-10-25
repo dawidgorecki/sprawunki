@@ -7,13 +7,18 @@
 
 import { PRODUCT_DICTIONARY } from './product-dictionary.js';
 
-export const DATA_VERSION = 1;
+// Version 2 added categories (spec 10.6). Older data is upgraded by migrate() in storage.js.
+export const DATA_VERSION = 2;
 export const MAX_NAME_LENGTH = 100;
 
 export function createInitialState(listId) {
   return {
     version: DATA_VERSION,
     activeListId: listId,
+    // Copies, so a later change to the state can never touch the constant itself.
+    categories: DEFAULT_CATEGORIES.map((category) => ({ ...category })),
+    // Normalized product name without quantity → category id, or null for "Bez kategorii".
+    categoryMemory: {},
     lists: [{ id: listId, name: 'Zakupy', items: [] }],
   };
 }

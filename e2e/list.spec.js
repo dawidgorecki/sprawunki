@@ -124,6 +124,27 @@ test('keeps the list after reloading the page', async ({ page }) => {
   await expect(boughtNames(page)).toHaveText(['mleko']);
 });
 
+test('loads a list saved by version 1.1 after the update', async ({ page }) => {
+  const item = (id, name, checked) => ({
+    id, name, checked, createdAt: 1000, checkedAt: checked ? 2000 : null, categoryId: null,
+  });
+  const v1 = {
+    version: 1,
+    activeListId: 'l_1',
+    lists: [{
+      id: 'l_1',
+      name: 'Zakupy',
+      items: [item('i_1', 'masło', false), item('i_2', 'chleb', false), item('i_3', 'mleko', true)],
+    }],
+  };
+  await page.evaluate((data) => localStorage.setItem('sprawunki', JSON.stringify(data)), v1);
+  await page.reload();
+
+  await expectToBuy(page, ['masło', 'chleb']);
+  await expect(boughtNames(page)).toHaveText(['mleko']);
+  await expect(page.getByRole('status')).toBeEmpty();
+});
+
 test('starts with an empty list and a message when saved data is corrupted', async ({ page }) => {
   await page.evaluate(() => localStorage.setItem('sprawunki', '{not json'));
   await page.reload();

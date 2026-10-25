@@ -3,23 +3,54 @@
 // The storage object is passed in as an argument (in the app: window.localStorage).
 // Tests pass a simple fake object instead, so they run without a browser.
 
-import { DATA_VERSION, createInitialState } from './store.js';
+import { DATA_VERSION, DEFAULT_CATEGORIES, createInitialState, findCategoryId } from './store.js';
 
 export const STORAGE_KEY = 'sprawunki';
 
 // Brings saved data up to the current DATA_VERSION, or throws if it can't.
-// Future versions add steps here, e.g.: if (data.version === 1) data = migrateV1toV2(data);
+// Each step upgrades by one version, so data saved by any older app version
+// goes through all the steps it missed. A future step: if (data.version === 2) ...
 export function migrate(data) {
-  if (data.version === DATA_VERSION) {
-    return data;
+  let migrated = data;
+  if (migrated.version === 1) {
+    migrated = migrateV1toV2(migrated);
+  }
+
+  if (migrated.version === DATA_VERSION) {
+    return migrated;
   }
   throw new Error(`Unknown data version: ${data.version}`);
+}
+
+// Version 2 adds categories (spec 10.6): the default ones, an empty memory, and
+// a category from the dictionary for every existing item, so the list is grouped
+// right after the update. Names, states and the order of items stay as they were.
+// Broken version 1 data (e.g. no lists) makes this throw, and loadState treats
+// it as corrupted, like any other unreadable value.
+function migrateV1toV2(data) {
+  const categories = DEFAULT_CATEGORIES.map((category) => ({ ...category }));
+  return {
+    ...data,
+    version: 2,
+    categories,
+    categoryMemory: {},
+    lists: data.lists.map((list) => ({
+      ...list,
+      items: list.items.map((item) => ({
+        ...item,
+        // An empty memory: the user has not chosen anything yet.
+        categoryId: findCategoryId(item.name, categories, {}),
+      })),
+    })),
+  };
 }
 
 // Checks the shape the rest of the app relies on, so a hand-edited or half-written
 // value is treated as corrupted instead of crashing the UI later.
 function isValidState(data) {
   if (!Array.isArray(data.lists)) return false;
+  if (!areValidCategories(data.categories)) return false;
+  if (!isValidCategoryMemory(data.categoryMemory)) return false;
 
   const activeList = data.lists.find((list) => list.id === data.activeListId);
   if (!activeList || !Array.isArray(activeList.items)) return false;
@@ -30,6 +61,21 @@ function isValidState(data) {
       typeof item.name === 'string' &&
       typeof item.checked === 'boolean',
   );
+}
+
+function areValidCategories(categories) {
+  return (
+    Array.isArray(categories) &&
+    categories.every(
+      (category) => typeof category?.id === 'string' && typeof category?.name === 'string',
+    )
+  );
+}
+
+// A plain object ({}), not null or an array, whose values are category ids or null.
+function isValidCategoryMemory(memory) {
+  if (typeof memory !== 'object' || memory === null || Array.isArray(memory)) return false;
+  return Object.values(memory).every((id) => id === null || typeof id === 'string');
 }
 
 // Returns { state, problem }.

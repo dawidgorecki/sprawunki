@@ -36,12 +36,20 @@ function names(list) {
 }
 
 describe('createInitialState', () => {
-  it('creates one empty active list in the version 1 format', () => {
+  it('creates one empty active list in the version 2 format', () => {
     expect(createInitialState('l_1')).toEqual({
-      version: 1,
+      version: 2,
       activeListId: 'l_1',
+      categories: DEFAULT_CATEGORIES,
+      categoryMemory: {},
       lists: [{ id: 'l_1', name: 'Zakupy', items: [] }],
     });
+  });
+
+  it('copies the default categories instead of sharing them', () => {
+    const state = createInitialState('l_1');
+    expect(state.categories).not.toBe(DEFAULT_CATEGORIES);
+    expect(state.categories[0]).not.toBe(DEFAULT_CATEGORIES[0]);
   });
 });
 
