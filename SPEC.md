@@ -109,7 +109,7 @@ Zapisywany pod jednym kluczem localStorage `sprawunki`, jako JSON:
 }
 ```
 
-- Struktura od razu przewiduje **wiele list** i **kategorie** (wersja 2). W wersji 1 istnieje dokładnie jedna lista, a `categoryId` jest zawsze `null`.
+- Struktura od razu przewiduje **wiele list** i **kategorie** (wersja 2). W wersji 1 istnieje dokładnie jedna lista, a `categoryId` jest zawsze `null`. *(Kategorie: wersja 2.0, model danych 2, zob. 10.6.)*
 - Identyfikatory: `crypto.randomUUID()` z prefiksem (`l_`, `i_`).
 - Czasy: milisekundy (`Date.now()`).
 
@@ -132,7 +132,7 @@ Zapisywany pod jednym kluczem localStorage `sprawunki`, jako JSON:
 
 ## 6. Poza zakresem wersji 1
 
-- **Wersja 2:** kategorie (działy sklepu, własna kolejność, zapamiętywanie kategorii produktu), wiele list.
+- **Wersja 2:** podzielona na **2.0 — kategorie** (działy sklepu, własna kolejność, zapamiętywanie kategorii produktu; punkt 10) i **2.1 — wiele list** (specyfikacja później).
 - **Później:** podpowiedzi z historii, udostępnianie listy linkiem, eksport/import kopii zapasowej, ~~blokada wygaszania ekranu, zmiana kolejności przeciąganiem, parsowanie ilości~~ (przeniesione do wersji 1.1, punkt 9).
 - **Nigdy (w obecnych założeniach):** synchronizacja między osobami lub urządzeniami, konta, ceny i budżet, powiadomienia, reklamy i analityka.
 
@@ -220,4 +220,112 @@ Trzy usprawnienia do używania w sklepie. Wersja 2 (kategorie, wiele list) pozos
 
 - Funkcje 9.1–9.3 działają w Chrome na Androidzie; na iOS aplikacja działa bez błędów (Wake Lock może być niedostępny).
 - Dane z wersji 1 wczytują się bez zmian i w dotychczasowej kolejności.
+- Testy przechodzą (`npm test`).
+
+## 10. Wersja 2.0 — kategorie
+
+Produkty do kupienia są pogrupowane według działów sklepu, w kolejności, w jakiej chodzi się po sklepie. Wiele list to osobna wersja 2.1 (specyfikacja później).
+
+### 10.1 Kategorie
+
+- Na start aplikacja ma zestaw **kategorii domyślnych**, w tej kolejności:
+  Warzywa i owoce, Pieczywo, Nabiał, Mięso i ryby, Wędliny, Mrożonki, Spiżarnia (mąka, makarony, konserwy, przyprawy), Słodycze i przekąski, Napoje, Chemia i kosmetyki.
+- Kategorie można dodawać, zmieniać im nazwy, usuwać i ustawiać ich kolejność (10.5). Kategorie domyślne nie różnią się od dodanych, więc też można je usunąć.
+- Nazwa kategorii: niepusta, maks. 40 znaków, bez duplikatów (porównanie jak w 3.2, bez parsowania ilości).
+- **„Bez kategorii”** to nie jest kategoria, tylko brak kategorii (`categoryId: null`). Zawsze stoi na końcu, nie da się jej usunąć ani zmienić jej nazwy.
+- Kategorie są wspólne dla całej aplikacji, nie dla jednej listy (przyda się w 2.1).
+
+### 10.2 Przypisywanie kategorii
+
+- Dodawanie produktu się nie zmienia: wpisujesz nazwę i zatwierdzasz. Kategoria jest dobierana automatycznie, według **nazwy bez ilości, znormalizowanej** (9.1, 3.2), w tej kolejności:
+  1. **pamięć użytkownika**: kategoria, którą użytkownik wcześniej wybrał dla tej nazwy (także wybór „Bez kategorii”, który wyłącza słownik dla tej nazwy);
+  2. **słownik**: wbudowana lista ok. 150 popularnych produktów, w popularnych formach („jajka”, „jajek”, „jaja”), dokładne dopasowanie;
+  3. **słownik po pierwszym słowie**: „mleko owsiane” → „mleko” → Nabiał;
+  4. w przeciwnym razie „Bez kategorii”.
+- Wpisy słownika wskazujące usuniętą kategorię są pomijane.
+- **Zmiana kategorii:** przy każdym produkcie do kupienia jest przycisk kategorii (ikona etykiety), `aria-label` „Kategoria: <nazwa>”. Otwiera systemową listę wyboru (`<select>`) z kategoriami w ich kolejności i „Bez kategorii” na końcu.
+  - Po wyborze produkt trafia **na koniec** wybranej grupy.
+  - Wybór jest zapisywany w pamięci użytkownika dla nazwy produktu bez ilości, więc następne „mleko” trafi tam samo.
+- Kupione produkty nie mają przycisku kategorii.
+- Duplikat (3.2, 9.1) nie zmienia kategorii istniejącego produktu.
+- Edycja nazwy (3.5) nie zmienia kategorii.
+- Usunięcie produktu nie usuwa wpisu z pamięci, bo pamięć ma przetrwać do następnych zakupów.
+
+### 10.3 Lista
+
+- „Do kupienia” jest podzielona na **grupy** według kategorii, w kolejności kategorii, a „Bez kategorii” na końcu. Każda grupa ma podtytuł z nazwą kategorii. Puste grupy nie są pokazywane.
+- Jeśli wszystkie produkty są w „Bez kategorii”, podtytuł nie jest pokazywany i lista wygląda jak w wersji 1.1.
+- W grupie obowiązuje ręczna kolejność z 9.2. Przeciąganie i strzałki działają tylko wewnątrz grupy; produkt nie wyjedzie poza swoją grupę. Kategorię zmienia się przyciskiem kategorii (10.2).
+- Nowy produkt trafia na koniec swojej grupy.
+- Odznaczony produkt wraca do swojej grupy, na swoje miejsce w ręcznej kolejności.
+- „Kupione” zostają jedną listą bez grup, posortowaną jak dotąd (3.3).
+- Licznik postępu liczy wszystkie produkty, jak dotąd.
+
+### 10.4 Pamięć kategorii
+
+- Pamięć to słownik „nazwa bez ilości, znormalizowana → id kategorii albo `null`”.
+- Wpis powstaje lub zmienia się tylko przy ręcznej zmianie kategorii produktu (10.2).
+- Usunięcie kategorii usuwa wpisy pamięci, które na nią wskazują.
+- Pamięć nie ma limitu wielkości: rośnie tylko przy ręcznych wyborach, więc zostaje mała.
+
+### 10.5 Zarządzanie kategoriami
+
+- Przycisk w nagłówku (ikona, `aria-label` „Kategorie”) otwiera okno (`<dialog>`, modalne; Escape i przycisk „Gotowe” zamykają).
+- W oknie jest lista kategorii, a przy każdej:
+  - uchwyt ≡: przeciąganie i strzałki jak w 9.2;
+  - nazwa: tapnięcie włącza edycję w miejscu (jak 3.5; pusta nazwa przywraca poprzednią, duplikat jest odrzucany z komunikatem);
+  - przycisk usuwania ×.
+- Pod listą jest pole i przycisk „Dodaj kategorię”. Nowa kategoria trafia na koniec.
+- **Usuwanie:**
+  - nieużywana kategoria jest usuwana od razu;
+  - jeśli należą do niej jakieś produkty, aplikacja pyta o potwierdzenie (`confirm()`: „Produkty z tej kategorii trafią do „Bez kategorii”. Usunąć?”). Po usunięciu produkty mają `categoryId: null`.
+  - Bez „Cofnij”, bo pasek komunikatów jest zasłonięty przez okno.
+- „Bez kategorii” nie występuje na liście w oknie.
+
+### 10.6 Dane
+
+Wersja danych **2** (`version: 2`). Nowe pola na najwyższym poziomie:
+
+```json
+{
+  "version": 2,
+  "activeListId": "l_1",
+  "categories": [
+    { "id": "c_produce", "name": "Warzywa i owoce" },
+    { "id": "c_bakery", "name": "Pieczywo" }
+  ],
+  "categoryMemory": {
+    "mleko owsiane": "c_dairy",
+    "baterie": null
+  },
+  "lists": [ "…bez zmian, items[].categoryId wskazuje kategorię albo null" ]
+}
+```
+
+- Kolejność kategorii to kolejność tablicy `categories` (tak jak w 9.2 dla produktów).
+- Kategorie domyślne mają **stałe** id (`c_produce`, `c_bakery`, `c_dairy`, `c_meat`, `c_deli`, `c_frozen`, `c_pantry`, `c_snacks`, `c_drinks`, `c_household`), bo słownik się do nich odwołuje. Nowe kategorie dostają `c_` + `crypto.randomUUID()`.
+- `categoryId` produktu wskazujący nieistniejącą kategorię jest traktowany jak `null`.
+- **Migracja 1 → 2** (`migrate`):
+  - dodaje kategorie domyślne i pustą pamięć,
+  - przypisuje istniejącym produktom kategorie ze słownika (10.2, kroki 2–4), dzięki czemu lista po aktualizacji od razu jest pogrupowana,
+  - nie zmienia nazw, stanów ani kolejności produktów.
+- Odczyt sprawdza też poprawność `categories` i `categoryMemory`; w razie błędu działa 4.2 (kopia zapasowa i pusta lista).
+- Starsza wersja aplikacji nie zna wersji danych 2. Nie jest to problem, bo aktualizacja instaluje się automatycznie (3.9), a stara wersja nie nadpisze danych (4.2).
+- Słownik jest w osobnym pliku `src/product-dictionary.js` (dane, bez logiki).
+
+### 10.7 Kolejność implementacji
+
+1. Kategorie domyślne, słownik i dobieranie kategorii (czyste funkcje), z testami.
+2. Model danych 2 i migracja w `storage.js`, z testami.
+3. `store.js`: kategoria przy dodawaniu, zmiana kategorii z pamięcią, grupy w `getSections`, `moveItem` w obrębie grupy, z testami.
+4. Interfejs: grupy z podtytułami; przeciąganie i strzałki w grupie.
+5. Interfejs: przycisk kategorii przy produkcie.
+6. `store.js`: dodawanie, zmiana nazwy, usuwanie i zmiana kolejności kategorii, z testami.
+7. Interfejs: okno zarządzania kategoriami.
+8. Test w sklepie, README, wersja 2.0.0, publikacja.
+
+### 10.8 Kryteria ukończenia
+
+- Funkcje 10.1–10.5 działają w Chrome na Androidzie.
+- Dane z wersji 1.1 wczytują się po migracji bez utraty produktów, z zachowaniem kolejności i z kategoriami ze słownika.
 - Testy przechodzą (`npm test`).
