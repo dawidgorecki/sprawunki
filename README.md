@@ -1,16 +1,22 @@
 # Sprawunki
 
-<img src="public/icons/icon-192.png" alt="Ikona aplikacji Sprawunki: biała torba na zakupy w ruchu na niebieskim tle" width="96" height="96">
-
 Sprawunki to prosta aplikacja webowa (PWA) do prowadzenia listy zakupów: w ciągu dnia dopisujesz produkty, w sklepie odhaczasz kupione, a po zakupach czyścisz listę. Ma być szybsza i prostsza w użyciu niż kartka papieru.
 
 **Aplikacja: https://dawidgorecki.github.io/sprawunki/**
+
+<p>
+  <img src="docs/screenshots/lista-jasny.png" alt="Lista zakupów pogrupowana według działów sklepu: Warzywa i owoce, Pieczywo, Nabiał, Napoje; ilości jako etykiety, np. „1 kg”, „2 l”; pod spodem sekcja Kupione" width="260">
+  <img src="docs/screenshots/lista-ciemny.png" alt="Ta sama lista w trybie ciemnym" width="260">
+  <img src="docs/screenshots/kategorie.png" alt="Okno Kategorie z listą działów do przestawiania, zmiany nazwy i usuwania oraz polem do dodania nowej kategorii" width="260">
+</p>
 
 ## Funkcje
 
 - Dodawanie produktów z pola na dole ekranu, w zasięgu kciuka. Ilość wpisujesz w nazwę, np. „mleko 2 l”, „6 jajek” albo „chleb x2”, a aplikacja pokazuje ją jako osobną etykietę.
 - Wykrywanie duplikatów bez względu na ilość: ponowne wpisanie produktu, który już jest na liście, nie dodaje go drugi raz. Wpis z nową ilością („mleko 3 l”) ją zmienia, a kupiony produkt wraca do „Do kupienia”.
-- Zmiana kolejności produktów do kupienia: przeciągnij za uchwyt ≡ albo użyj strzałek na klawiaturze.
+- Kategorie, czyli działy sklepu: produkty do kupienia są pogrupowane w kolejności, w jakiej chodzisz po sklepie. Aplikacja zna kategorie ok. 200 popularnych produktów, a gdy zmienisz kategorię ręcznie, zapamięta ją na następny raz.
+- Własne kategorie: w oknie „Kategorie” dodasz nowe, zmienisz nazwy, usuniesz zbędne i ustawisz kolejność pod swój sklep.
+- Zmiana kolejności produktów w obrębie kategorii: przeciągnij za uchwyt ≡ albo użyj strzałek na klawiaturze.
 - Przełącznik w nagłówku, który nie pozwala ekranowi zgasnąć w trakcie zakupów (tam, gdzie przeglądarka to obsługuje).
 - Dwie sekcje, „Do kupienia” i „Kupione”, oraz licznik postępu, np. „3 z 8 kupione”.
 - Edycja nazwy po tapnięciu, usuwanie jednym przyciskiem i „Wyczyść kupione”.
@@ -60,19 +66,17 @@ src/
   store.js         # logika listy: czyste funkcje, bez DOM i localStorage
   storage.js       # zapis i odczyt localStorage, migracje, kopia uszkodzonych danych
   ui.js            # renderowanie i obsługa zdarzeń
+  categories-dialog.js   # okno zarządzania kategoriami
+  list-controls.js       # wspólne dla list: edycja nazwy w miejscu, uchwyt, strzałki
   drag.js          # zmiana kolejności przeciąganiem (Pointer Events)
   wake-lock.js     # blokada wygaszania ekranu (Screen Wake Lock API)
+  product-dictionary.js  # słownik produkt → kategoria (same dane)
   styles.css
 public/            # favicon i ikony aplikacji
 tests/             # testy logiki: store.js i storage.js (Vitest)
 e2e/               # testy interfejsu (Playwright)
+docs/screenshots/  # zrzuty ekranu do tego pliku
 ```
-
-### Kolory i ikona
-
-Kolory są zdefiniowane jako zmienne CSS na początku `src/styles.css`, osobno dla trybu jasnego i ciemnego. Kolor akcentu (przyciski, zaznaczenia) to `#2f6f9e` w trybie jasnym i `#73b1d8` w ciemnym.
-
-Ikona to biała torba na zakupy w ruchu z małym ptaszkiem, na niebieskim tle w tej samej barwie co akcent. Projekt nie zawiera jej źródła wektorowego, tylko gotowe pliki PNG: `public/favicon.png` (64×64, zaokrąglone rogi) oraz `public/icons/icon-192.png`, `icon-512.png` i `apple-touch-icon.png` (180×180). Ikony 192 i 512 są też wariantem `maskable`, więc rysunek mieści się w środkowym kole, które Android zostawia po przycięciu.
 
 Pełna specyfikacja: [SPEC.md](SPEC.md).
 
