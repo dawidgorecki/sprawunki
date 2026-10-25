@@ -127,15 +127,15 @@ Zapisywany pod jednym kluczem localStorage `sprawunki`, jako JSON:
 - Projekt pod telefon (mobile first); na komputerze lista wyśrodkowana, maks. ok. 600 px szerokości.
 - Elementy dotykowe min. 44×44 px.
 - Fonty systemowe, brak zasobów z zewnątrz.
-- Tryb jasny i ciemny według ustawień systemu (`prefers-color-scheme`).
+- Tryb jasny i ciemny według ustawień systemu (`prefers-color-scheme`). Od wersji 2.2 można też wybrać motyw ręcznie (12.2).
 - Dostępność: etykiety dla przycisków z ikonami (`aria-label`), prawdziwe elementy `<input type="checkbox">` i `<button>`, obsługa klawiatury.
 - Bezpieczeństwo: nazwy produktów wstawiane wyłącznie przez `textContent`, nigdy przez `innerHTML`.
 - Szybkość: start i reakcje natychmiastowe; brak zbędnych zależności.
 
 ## 6. Poza zakresem wersji 1
 
-- **Wersja 2:** podzielona na **2.0 — kategorie** (działy sklepu, własna kolejność, zapamiętywanie kategorii produktu; punkt 10) i **2.1 — wiele list** (punkt 11).
-- **Wersja 2.2 (planowana):** eksport/import kopii zapasowej.
+- **Wersja 2:** podzielona na **2.0 — kategorie** (działy sklepu, własna kolejność, zapamiętywanie kategorii produktu; punkt 10), **2.1 — wiele list** (punkt 11) i **2.2 — ustawienia** (motyw, numer wersji, ekran powitalny; punkt 12).
+- **Wersja 2.3 (planowana):** eksport/import kopii zapasowej.
 - **Później:** podpowiedzi z historii, udostępnianie listy linkiem, przenoszenie produktu między listami, ~~blokada wygaszania ekranu, zmiana kolejności przeciąganiem, parsowanie ilości~~ (przeniesione do wersji 1.1, punkt 9).
 - **Nigdy (w obecnych założeniach):** synchronizacja między osobami lub urządzeniami, konta, ceny i budżet, powiadomienia, reklamy i analityka.
 
@@ -334,3 +334,43 @@ Osobne listy, np. na spożywczy, drogerię i aptekę. Kategorie (punkt 10) są w
 - Nowe listy dostają `l_` + `crypto.randomUUID()`.
 - Odczyt już teraz sprawdza, czy `activeListId` wskazuje istniejącą listę; w razie błędu działa 4.2.
 - Wersja 2.0 aplikacji poprawnie odczyta dane z kilkoma listami (pokaże tylko aktywną), więc aktualizacja jest bezpieczna w obie strony.
+
+## 12. Wersja 2.2 — ustawienia
+
+Okno „Ustawienia” z wyborem motywu i informacjami o aplikacji oraz ładniejszy ekran powitalny.
+
+### 12.1 Okno „Ustawienia”
+
+- Przycisk w nagłówku z ikoną koła zębatego, `aria-label` „Ustawienia”, `aria-haspopup="dialog"`. Stoi ostatni z prawej, za przełącznikiem wygaszania ekranu, bo jest używany najrzadziej.
+- Na wąskim telefonie (360 px) nagłówek z czterema przyciskami nadal mieści się w jednym wierszu; długa nazwa listy (11.2) jest ucinana jak dotąd.
+- Otwiera okno (`<dialog>`, modalne) w wyglądzie pozostałych okien: tytuł „Ustawienia”, przycisk „Gotowe”, Escape zamyka.
+- Dwie sekcje: „Motyw” (12.2) i „O aplikacji” (12.3).
+
+### 12.2 Motyw
+
+- Trzy opcje: „Jasny”, „Ciemny” i „Automatyczny”. „Automatyczny” to dotychczasowe działanie: motyw według ustawień systemu, także gdy system zmieni go w trakcie działania aplikacji (np. tryb ciemny włączany wieczorem). Domyślnie „Automatyczny”.
+- Kontrolka: trzy przyciski opcji (`<input type="radio">`) w `<fieldset>` z `<legend>` „Motyw”, wyglądające jak jeden przełącznik podzielony na trzy części. Obsługa klawiaturą jak w każdej grupie radio (strzałki).
+- Zmiana działa od razu, bez zamykania okna i przeładowania strony.
+- Kolor paska stanu przeglądarki (`theme-color`) podąża za wybranym motywem.
+- Motyw dotyczy całej aplikacji, nie jednej listy, i jest zapamiętany na urządzeniu (12.5).
+- **Bez mignięcia przy starcie:** motyw jest ustawiany, zanim strona zostanie wyrysowana (krótki skrypt w `<head>`), żeby przy wybranym „Ciemnym” nie błysnął na chwilę jasny ekran.
+
+### 12.3 O aplikacji
+
+- Sekcja w oknie „Ustawienia”: nazwa „Sprawunki”, „Wersja 2.2.0”, „Autor: Dawid Górecki”.
+- Numer wersji pochodzi z `package.json` i jest wstawiany do kodu przy budowaniu, więc zmienia się go w jednym miejscu.
+- Pokazana wersja to wersja kodu, który właśnie działa. Po aktualizacji w tle nowa wersja działa od kolejnego uruchomienia (3.9), więc numer pozwala sprawdzić, czy aktualizacja już weszła.
+
+### 12.4 Ekran powitalny
+
+- Na Androidzie ekran powitalny zainstalowanej aplikacji tworzy przeglądarka z manifestu: kolor tła (`background_color`), ikona i nazwa. Nie da się na nim umieścić innych treści, dlatego wersja i autor są w oknie „Ustawienia” (12.3). Własny ekran startowy w HTML odrzucono, bo wydłużałby każde uruchomienie (punkt 5: start natychmiastowy).
+- Dotąd tło było jasnoszare (`#f4f6f9`, także w trybie ciemnym), a ikona z niebieskim tłem wyglądała na nim jak naklejony kwadrat.
+- Zmiana: `background_color` w manifeście ma kolor tła ikony (ciemniejszy niebieski z jej gradientu), więc ikona zlewa się z tłem i cały ekran jest niebieski z białą torbą, w trybie jasnym i ciemnym. `theme_color` manifestu dostaje ten sam kolor, żeby pasek stanu podczas powitania pasował do tła; po starcie pasek przejmuje kolor motywu (12.2).
+- Chrome aktualizuje manifest zainstalowanej aplikacji z opóźnieniem (sprawdza go nie częściej niż raz na dobę), więc nowy ekran powitalny może pojawić się dopiero po kilku uruchomieniach lub dniach. Nie da się tego przyspieszyć z poziomu aplikacji.
+- iOS: bez zmian. Ekrany powitalne iOS (`apple-touch-startup-image`) wymagają osobnego obrazka dla każdego rozmiaru ekranu, co jest poza zakresem.
+
+### 12.5 Dane
+
+- Motyw jest zapisany pod **osobnym kluczem** localStorage `sprawunki-theme`: wartość `light` albo `dark`; brak klucza oznacza „Automatyczny”. To ustawienie urządzenia, a nie dane list, więc nie trafia do danych pod kluczem `sprawunki`. **Wersja danych zostaje 2, bez migracji.**
+- Nieznana wartość jest traktowana jak „Automatyczny”, bez komunikatu (to tylko wygląd, nic nie ginie).
+- Gdy przeglądarka blokuje localStorage, wybór motywu działa do zamknięcia aplikacji; komunikat o błędzie zapisu pokazuje już lista (4.2).

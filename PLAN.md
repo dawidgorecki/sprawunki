@@ -10,7 +10,8 @@ Kolejność implementacji i kryteria ukończenia kolejnych wersji. Co i jak ma d
 | 1.1 | Parsowanie ilości, zmiana kolejności, blokada wygaszania ekranu | 9 | ukończona |
 | 2.0 | Kategorie | 10 | ukończona |
 | 2.1 | Wiele list | 11 | ukończona |
-| 2.2 | Eksport/import kopii zapasowej | — | planowana |
+| 2.2 | Ustawienia: motyw, numer wersji, ekran powitalny | 12 | **w trakcie** |
+| 2.3 | Eksport/import kopii zapasowej | — | planowana |
 
 Pomysły na później i rzeczy poza zakresem: punkt 6 specyfikacji.
 
@@ -87,4 +88,22 @@ Pomysły na później i rzeczy poza zakresem: punkt 6 specyfikacji.
 
 - Funkcje 11.1–11.3 działają w Chrome na Androidzie.
 - Dane z wersji 2.0 wczytują się bez zmian.
+- Testy przechodzą (`npm test`, `npm run test:e2e`).
+
+## Wersja 2.2 — ustawienia
+
+### Kolejność implementacji
+
+1. `storage.js`: odczyt i zapis motywu pod kluczem `sprawunki-theme`, z testami.
+2. Motyw w CSS: jasny i ciemny wymuszany atrybutem na `<html>`, automatyczny przez `prefers-color-scheme` jak dotąd; skrypt w `<head>` bez mignięcia przy starcie; `theme-color` według motywu.
+3. Interfejs: przycisk „Ustawienia” i okno z wyborem motywu.
+4. Interfejs: sekcja „O aplikacji” z wersją z `package.json` i autorem.
+5. Ekran powitalny: `background_color` i `theme_color` w manifeście.
+6. Test na telefonie, README, wersja 2.2.0, publikacja.
+
+### Kryteria ukończenia
+
+- Funkcje 12.1–12.3 działają w Chrome na Androidzie; ekran powitalny (12.4) zmienia się po aktualizacji manifestu przez Chrome.
+- Wybrany motyw działa od pierwszej klatki po uruchomieniu, bez mignięcia.
+- Dane z wersji 2.1 wczytują się bez zmian, a motyw dotychczasowych użytkowników to „Automatyczny”.
 - Testy przechodzą (`npm test`, `npm run test:e2e`).

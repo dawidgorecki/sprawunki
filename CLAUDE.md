@@ -4,7 +4,7 @@ Instrukcje dla Claude Code w tym projekcie.
 
 ## Projekt
 
-**Sprawunki** — aplikacja PWA do listy zakupów: jedna lista, dodawanie, odhaczanie, edycja, usuwanie produktów; w wersji 1.1 także parsowanie ilości, zmiana kolejności przeciąganiem i blokada wygaszania ekranu; w wersji 2.0 kategorie (działy sklepu); w wersji 2.1 wiele list; dane w localStorage; pełne działanie offline. **Pełna specyfikacja: `SPEC.md`, kolejność prac i kryteria ukończenia: `PLAN.md`. Przed każdym zadaniem sprawdź, czego dotyczy w specyfikacji.**
+**Sprawunki** — aplikacja PWA do listy zakupów: jedna lista, dodawanie, odhaczanie, edycja, usuwanie produktów; w wersji 1.1 także parsowanie ilości, zmiana kolejności przeciąganiem i blokada wygaszania ekranu; w wersji 2.0 kategorie (działy sklepu); w wersji 2.1 wiele list; w wersji 2.2 ustawienia (motyw, numer wersji, ekran powitalny); dane w localStorage; pełne działanie offline. **Pełna specyfikacja: `SPEC.md`, kolejność prac i kryteria ukończenia: `PLAN.md`. Przed każdym zadaniem sprawdź, czego dotyczy w specyfikacji.**
 
 Autor programuje zawodowo w PHP i zna podstawy JavaScriptu. Projekt służy też nauce, więc kod ma być czytelny i zrozumiały bez znajomości frameworków.
 
@@ -72,9 +72,9 @@ playwright.config.js
 
 ## Sposób pracy
 
-- Pracuj małymi krokami według kolejności implementacji w `PLAN.md` (obecnie wersja 2.1). Jeden krok = jedna logiczna zmiana.
+- Pracuj małymi krokami według kolejności implementacji w `PLAN.md` (obecnie wersja 2.2). Jeden krok = jedna logiczna zmiana.
 - Do każdej zmiany w `store.js` lub `storage.js` dodaj albo zaktualizuj testy. Po zmianie uruchom `npm test`.
 - Do każdej zmiany w interfejsie dodaj albo zaktualizuj testy w `e2e/` i uruchom `npm run test:e2e`. Elementy wyszukuj po roli i etykiecie (`getByRole`), jak użytkownik i czytnik ekranu. Testy przeglądarkowe nie zastępują ręcznego testu autora.
-- Nie dodawaj funkcji spoza zakresu wersji 1, 1.1, 2.0 i 2.1 (punkty 3, 9, 10 i 11 w `SPEC.md`; to, co poza zakresem, opisuje punkt 6). Jeśli coś wydaje się potrzebne, zapytaj.
+- Nie dodawaj funkcji spoza zakresu wersji 1, 1.1, 2.0, 2.1 i 2.2 (punkty 3, 9, 10, 11 i 12 w `SPEC.md`; to, co poza zakresem, opisuje punkt 6). Jeśli coś wydaje się potrzebne, zapytaj.
 - Gdy specyfikacja jest niejasna, zapytaj zamiast zgadywać.
 - Po zakończeniu kroku krótko wyjaśnij, co zmieniłeś i dlaczego (autor się uczy), oraz zaproponuj komunikat commita.
