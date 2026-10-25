@@ -112,7 +112,7 @@ test.describe('on a short screen', () => {
     await expect(newRow).toHaveText(/Apteka/);
     await expect(newRow).toBeInViewport({ ratio: 1 });
     const row = await newRow.boundingBox();
-    const form = await dialog(page).locator('#add-category-form').boundingBox();
+    const form = await dialog(page).locator('form').boundingBox();
     expect(row.y + row.height).toBeLessThanOrEqual(form.y);
   });
 });

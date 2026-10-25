@@ -122,7 +122,7 @@ function startDrag(list, handle, startEvent, onMove) {
 }
 
 // What scrolls under the list: the whole page, or an open <dialog> (the
-// categories dialog), which scrolls on its own while the page stays still.
+// categories or lists dialog), which scrolls on its own while the page stays still.
 //   offset()      – how far it is scrolled now
 //   scrollBy(dy)  – scroll by dy pixels
 //   visibleArea() – top and bottom of the visible part, on screen

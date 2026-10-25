@@ -15,6 +15,10 @@ import {
   isCategoryUsed,
   removeCategory,
   moveCategory,
+  addList,
+  renameList,
+  removeList,
+  moveList,
 } from './store.js';
 import { loadState, saveState } from './storage.js';
 import { createUI } from './ui.js';
@@ -141,6 +145,47 @@ const ui = createUI({
 
   onMoveCategory(categoryId, toIndex) {
     const newState = moveCategory(state, categoryId, toIndex);
+    if (newState !== state) {
+      update(newState);
+    }
+  },
+
+  // ----- Lists dialog (spec 11.3) -----
+
+  // A new list does not become active, so several can be added in a row.
+  onAddList(name) {
+    const result = addList(state, name, createId('l_'));
+    if (result.status === 'added') {
+      update(result.state);
+    } else if (result.status === 'duplicate') {
+      ui.showListMessage('Taka lista już jest.');
+    }
+  },
+
+  onRenameList(listId, name) {
+    const result = renameList(state, listId, name);
+    if (result.status === 'renamed') {
+      update(result.state);
+    } else if (result.status === 'duplicate') {
+      ui.showListMessage('Taka lista już jest.');
+    }
+  },
+
+  // No "Cofnij", as with categories: an empty list goes at once, a list with
+  // products only after a confirmation.
+  onRemoveList(listId) {
+    const list = state.lists.find((l) => l.id === listId);
+    if (list.items.length > 0 && !confirm(`Usunąć listę „${list.name}” razem z produktami?`)) {
+      return;
+    }
+    const newState = removeList(state, listId);
+    if (newState !== state) {
+      update(newState);
+    }
+  },
+
+  onMoveList(listId, toIndex) {
+    const newState = moveList(state, listId, toIndex);
     if (newState !== state) {
       update(newState);
     }

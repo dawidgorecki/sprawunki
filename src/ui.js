@@ -2,17 +2,28 @@
 // or how the state changes: it draws the state it is given and reports user
 // actions to the handlers passed in from main.js.
 
-import { getActiveList, getSections, getProgress, parseQuantity, MAX_NAME_LENGTH } from './store.js';
+import {
+  getActiveList,
+  getSections,
+  getProgress,
+  parseQuantity,
+  MAX_NAME_LENGTH,
+  MAX_CATEGORY_NAME_LENGTH,
+  MAX_LIST_NAME_LENGTH,
+} from './store.js';
 import { enableDragging } from './drag.js';
 import { startEditing, createHandle, moveWithArrowKeys, findRow } from './list-controls.js';
-import { createCategoriesDialog } from './categories-dialog.js';
+import { createManageDialog } from './manage-dialog.js';
 
 const MESSAGE_DURATION_MS = 5000;
 
 // handlers: { onAdd(name), onToggle(itemId), onRename(itemId, name),
 //             onRemove(itemId), onMove(itemId, toIndex),
 //             onSetCategory(itemId, categoryId), onClearChecked(), onToggleWakeLock(),
-//             and the category handlers listed in categories-dialog.js }
+//             onAddCategory(name), onRenameCategory(categoryId, name),
+//             onRemoveCategory(categoryId), onMoveCategory(categoryId, toIndex),
+//             onAddList(name), onRenameList(listId, name),
+//             onRemoveList(listId), onMoveList(listId, toIndex) }
 // Returns functions main.js uses to update the screen.
 export function createUI(handlers) {
   const elements = {
@@ -77,7 +88,27 @@ export function createUI(handlers) {
   main.addEventListener('keydown', (event) => moveWithArrowKeys(event, handlers.onMove));
   enableDragging(elements.toBuyGroups, handlers.onMove);
 
-  const categoriesDialog = createCategoriesDialog(handlers);
+  // Two dialogs built from the same code (manage-dialog.js), spec 10.5 and 11.3.
+  const categoriesDialog = createManageDialog(document.getElementById('categories-dialog'), {
+    openButton: document.getElementById('open-categories'),
+    maxLength: MAX_CATEGORY_NAME_LENGTH,
+    editLabel: 'Nazwa kategorii',
+    removeLabel: (name) => `Usuń kategorię: ${name}`,
+    onAdd: handlers.onAddCategory,
+    onRename: handlers.onRenameCategory,
+    onRemove: handlers.onRemoveCategory,
+    onMove: handlers.onMoveCategory,
+  });
+  const listsDialog = createManageDialog(document.getElementById('lists-dialog'), {
+    openButton: document.getElementById('open-lists'),
+    maxLength: MAX_LIST_NAME_LENGTH,
+    editLabel: 'Nazwa listy',
+    removeLabel: (name) => `Usuń listę: ${name}`,
+    onAdd: handlers.onAddList,
+    onRename: handlers.onRenameList,
+    onRemove: handlers.onRemoveList,
+    onMove: handlers.onMoveList,
+  });
 
   elements.wakeLock.addEventListener('click', () => handlers.onToggleWakeLock());
 
@@ -115,12 +146,18 @@ export function createUI(handlers) {
     render(state) {
       render(elements, state);
       categoriesDialog.render(state.categories);
+      // There is always at least one list, so the last one can't be removed.
+      listsDialog.render(state.lists, { canRemove: state.lists.length > 1 });
     },
 
-    // For messages about categories while their dialog is open: the dialog
-    // covers the message bar at the bottom of the screen.
+    // For messages about categories or lists while their dialog is open: the
+    // dialog covers the message bar at the bottom of the screen.
     showCategoryMessage(text) {
       categoriesDialog.showMessage(text);
+    },
+
+    showListMessage(text) {
+      listsDialog.showMessage(text);
     },
 
     // persistent: the message stays until the user closes it with "OK"; use it for

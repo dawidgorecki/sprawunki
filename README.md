@@ -66,7 +66,7 @@ src/
   store.js         # logika listy: czyste funkcje, bez DOM i localStorage
   storage.js       # zapis i odczyt localStorage, migracje, kopia uszkodzonych danych
   ui.js            # renderowanie i obsługa zdarzeń
-  categories-dialog.js   # okno zarządzania kategoriami
+  manage-dialog.js       # okna zarządzania kategoriami i listami
   list-controls.js       # wspólne dla list: edycja nazwy w miejscu, uchwyt, strzałki
   drag.js          # zmiana kolejności przeciąganiem (Pointer Events)
   wake-lock.js     # blokada wygaszania ekranu (Screen Wake Lock API)

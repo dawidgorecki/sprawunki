@@ -1,5 +1,5 @@
-// Row behaviour shared by the shopping list (ui.js) and the categories dialog
-// (categories-dialog.js): editing a name in place, the reorder handle and
+// Row behaviour shared by the shopping list (ui.js) and the categories and
+// lists dialogs (manage-dialog.js): editing a name in place, the reorder handle and
 // moving a row with the arrow keys. Every row is an <li data-id="…">.
 
 // Swaps the name button for a text field. Enter or leaving the field saves,
@@ -82,8 +82,8 @@ export function moveWithArrowKeys(event, onMove) {
   findRow(row.dataset.id)?.querySelector('.item-handle').focus();
 }
 
-// Product ids start with "i_" and category ids with "c_", so one search over
-// the whole page always finds the right row.
+// Product ids start with "i_", category ids with "c_" and list ids with "l_",
+// so one search over the whole page always finds the right row.
 export function findRow(id) {
   // CSS.escape: the id goes into a selector, so special characters must be escaped.
   return document.querySelector(`li[data-id="${CSS.escape(id)}"]`);

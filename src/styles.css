@@ -116,8 +116,8 @@ h1 {
   color: var(--color-muted);
 }
 
-/* Round icon buttons on the right: categories (spec 10.5) and the wake lock
-   switch (spec 9.3), which is outlined when off and filled when on. */
+/* Round icon buttons on the right: lists (spec 11.3), categories (spec 10.5)
+   and the wake lock switch (spec 9.3), which is outlined when off and filled when on. */
 .header-button {
   display: grid;
   place-items: center;
@@ -258,16 +258,16 @@ li + li {
 }
 
 /* Rows stepping aside while another one is dragged past them: products and,
-   in their dialog, categories. */
+   in their dialogs, categories and lists. */
 #to-buy-groups li,
-#category-list li {
+.manage-list li {
   transition: transform 150ms ease;
 }
 
 /* The dragged item follows the finger directly, so no transition here. Its own
    background covers the items it passes over. */
 #to-buy-groups li.dragging,
-#category-list li.dragging {
+.manage-list li.dragging {
   position: relative;
   z-index: 1;
   background: var(--color-surface);
@@ -287,7 +287,7 @@ body.is-dragging .item-handle {
 
 @media (prefers-reduced-motion: reduce) {
   #to-buy-groups li,
-  #category-list li {
+  .manage-list li {
     transition: none;
   }
 }
@@ -335,6 +335,12 @@ body.is-dragging .item-handle {
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
+}
+
+/* The × of the last list (spec 11.3): still visible, so the row looks like the others. */
+.item-remove:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 /* inline-block keeps "2 l" together on one line when a long name wraps. */
@@ -486,11 +492,11 @@ li.highlight {
   cursor: pointer;
 }
 
-/* ---------- Categories dialog (spec 10.5) ---------- */
+/* ---------- Categories and lists dialogs (spec 10.5, 11.3) ---------- */
 
 /* A native <dialog> opened with showModal(). It scrolls on its own when the
-   list of categories is longer than the screen. */
-#categories-dialog {
+   list of categories or lists is longer than the screen. */
+.manage-dialog {
   width: calc(100% - 1.5rem);
   max-width: 560px;
   max-height: calc(100dvh - 2rem);
@@ -502,7 +508,7 @@ li.highlight {
   color: var(--color-text);
 }
 
-#categories-dialog::backdrop {
+.manage-dialog::backdrop {
   background: rgb(0 0 0 / 0.45);
 }
 
@@ -531,7 +537,7 @@ li.highlight {
   color: var(--color-text);
 }
 
-#close-categories {
+.dialog-close {
   min-width: 44px;
   min-height: 44px;
   padding: 0 1rem;
@@ -550,8 +556,8 @@ li.highlight {
 }
 
 /* Sticks to the bottom while the dialog scrolls, like the add form of the
-   main screen, so a new category can be added without scrolling down. */
-#add-category-form {
+   main screen, so a new entry can be added without scrolling down. */
+.manage-form {
   position: sticky;
   bottom: 0;
   z-index: 2;
@@ -564,12 +570,12 @@ li.highlight {
 
 /* scrollIntoView() ignores the sticky header and form, so without this margin
    a row scrolled into view would end up hidden under one of them. */
-#category-list li {
+.manage-list li {
   scroll-margin: 5.5rem 0 5rem;
 }
 
 /* The same look as the field for new products. */
-#new-category-name {
+.manage-form input {
   flex: 1;
   min-width: 0;
   min-height: 48px;
@@ -580,7 +586,7 @@ li.highlight {
   font-size: 1rem;
 }
 
-#add-category-form button {
+.manage-form button {
   min-height: 48px;
   padding: 0 1.25rem;
   border: 1px solid var(--color-accent);
@@ -593,14 +599,14 @@ li.highlight {
 
 /* Like the message bar of the main screen. Takes no room while empty; the <p>
    stays in the DOM so screen readers keep announcing new text put into it. */
-#categories-message {
+.dialog-message {
   margin: 0;
   border-radius: 10px;
   background: var(--color-message-bg);
   color: var(--color-message-text);
 }
 
-#categories-message:not(:empty) {
+.dialog-message:not(:empty) {
   margin-top: 0.5rem;
   padding: 0.625rem 0.875rem;
 }
