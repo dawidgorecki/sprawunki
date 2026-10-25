@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { STORAGE_KEY, migrate, loadState, saveState } from '../src/storage.js';
-import { createInitialState, addItem, DEFAULT_CATEGORIES } from '../src/store.js';
+import { createInitialState, addItem, addList, setActiveList, DEFAULT_CATEGORIES } from '../src/store.js';
 
 // Minimal stand-in for localStorage: only the two methods storage.js uses.
 function createFakeStorage(initial = {}) {
@@ -123,6 +123,18 @@ describe('loadState', () => {
     expect(loadState(storage, options)).toEqual({ state: saved, problem: null });
   });
 
+  it('loads several lists and keeps the active one', () => {
+    let saved = addList(sampleState(), 'Drogeria', 'l_2').state;
+    saved = setActiveList(saved, 'l_2');
+    saved = addItem(saved, 'szampon', { id: 'i_2', now: 2000 }).state;
+    const storage = createFakeStorage({ [STORAGE_KEY]: JSON.stringify(saved) });
+
+    const { state, problem } = loadState(storage, options);
+    expect(problem).toBeNull();
+    expect(state).toEqual(saved);
+    expect(state.activeListId).toBe('l_2');
+  });
+
   it('returns what saveState wrote', () => {
     const storage = createFakeStorage();
     saveState(storage, sampleState());
@@ -147,6 +159,20 @@ describe('loadState', () => {
       JSON.stringify({ ...createInitialState('l_1'), categoryMemory: { mleko: 5 } }),
     ],
     ['a missing active list', JSON.stringify({ ...createInitialState('l_1'), activeListId: 'l_x' })],
+    [
+      'a broken list that is not active',
+      JSON.stringify({
+        ...createInitialState('l_1'),
+        lists: [
+          { id: 'l_1', name: 'Zakupy', items: [] },
+          { id: 'l_2', name: 'Drogeria' },
+        ],
+      }),
+    ],
+    [
+      'a list without a name',
+      JSON.stringify({ ...createInitialState('l_1'), lists: [{ id: 'l_1', items: [] }] }),
+    ],
     [
       'an item without a name',
       JSON.stringify({

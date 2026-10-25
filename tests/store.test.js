@@ -13,6 +13,12 @@ import {
   isCategoryUsed,
   removeCategory,
   moveCategory,
+  MAX_LIST_NAME_LENGTH,
+  addList,
+  renameList,
+  removeList,
+  moveList,
+  setActiveList,
   getActiveList,
   addItem,
   toggleItem,
@@ -837,5 +843,215 @@ describe('moveCategory', () => {
     const snapshot = structuredClone(before);
     moveCategory(before, 'c_household', 0);
     expect(before).toEqual(snapshot);
+  });
+});
+
+// ---------- Lists (spec 11) ----------
+
+// A state with the default list "Zakupy" (l_1) holding "mleko", plus empty
+// lists with the given names (l_2, l_3, …).
+function stateWithLists(...listNames) {
+  let state = stateWith('mleko');
+  listNames.forEach((name, index) => {
+    state = addList(state, name, `l_${index + 2}`).state;
+  });
+  return state;
+}
+
+function listNames(state) {
+  return state.lists.map((list) => list.name);
+}
+
+describe('addList', () => {
+  it('adds an empty list at the end without making it active', () => {
+    const result = addList(stateWith('mleko'), '  Drogeria ', 'l_2');
+
+    expect(result.status).toBe('added');
+    expect(result.listId).toBe('l_2');
+    expect(result.state.lists.at(-1)).toEqual({ id: 'l_2', name: 'Drogeria', items: [] });
+    expect(result.state.activeListId).toBe('l_1');
+    expect(names(items(result.state))).toEqual(['mleko']);
+  });
+
+  it('rejects an empty or too long name', () => {
+    const before = stateWith();
+    expect(addList(before, '   ', 'l_2')).toEqual({ state: before, status: 'empty', listId: null });
+    expect(addList(before, 'a'.repeat(MAX_LIST_NAME_LENGTH + 1), 'l_2').status).toBe('too-long');
+    expect(addList(before, 'a'.repeat(MAX_LIST_NAME_LENGTH), 'l_2').status).toBe('added');
+  });
+
+  it('rejects a duplicate, ignoring case and spaces', () => {
+    const before = stateWith();
+    const result = addList(before, '  ZAKUPY ', 'l_2');
+    expect(result.status).toBe('duplicate');
+    expect(result.state).toBe(before);
+  });
+
+  it('does not read a quantity from a list name', () => {
+    expect(addList(stateWith(), 'Zakupy 2 kg', 'l_2').status).toBe('added');
+  });
+});
+
+describe('renameList', () => {
+  it('renames a list and keeps its items', () => {
+    const { state, status } = renameList(stateWith('mleko'), 'l_1', ' Spożywczy ');
+    expect(status).toBe('renamed');
+    expect(listNames(state)).toEqual(['Spożywczy']);
+    expect(names(items(state))).toEqual(['mleko']);
+  });
+
+  it('allows changing only the letter case', () => {
+    expect(renameList(stateWith(), 'l_1', 'ZAKUPY').status).toBe('renamed');
+  });
+
+  it('rejects an empty name, a duplicate or an unknown id and keeps the state', () => {
+    const before = stateWithLists('Drogeria');
+    for (const [id, name, status] of [
+      ['l_2', '  ', 'empty'],
+      ['l_2', 'a'.repeat(MAX_LIST_NAME_LENGTH + 1), 'too-long'],
+      ['l_2', 'zakupy', 'duplicate'],
+      ['l_404', 'Apteka', 'not-found'],
+    ]) {
+      const result = renameList(before, id, name);
+      expect(result.status).toBe(status);
+      expect(result.state).toBe(before);
+    }
+  });
+});
+
+describe('removeList', () => {
+  it('removes a list that is not active and keeps the active one', () => {
+    const state = removeList(stateWithLists('Drogeria', 'Apteka'), 'l_2');
+    expect(listNames(state)).toEqual(['Zakupy', 'Apteka']);
+    expect(state.activeListId).toBe('l_1');
+  });
+
+  it('removes the list together with its items', () => {
+    let state = setActiveList(stateWithLists('Drogeria'), 'l_2');
+    state = addItem(state, 'szampon', { id: 'i_9', now: 9000 }).state;
+    state = removeList(state, 'l_2');
+    expect(state.lists.flatMap((list) => names(list.items))).toEqual(['mleko']);
+  });
+
+  it('makes the first list active after removing the active one', () => {
+    let state = setActiveList(stateWithLists('Drogeria', 'Apteka'), 'l_3');
+    state = removeList(state, 'l_3');
+    expect(state.activeListId).toBe('l_1');
+
+    // Also when the active list is the first one: the next list becomes first.
+    state = removeList(state, 'l_1');
+    expect(state.activeListId).toBe('l_2');
+    expect(listNames(state)).toEqual(['Drogeria']);
+  });
+
+  it('never removes the last list', () => {
+    const before = stateWith('mleko');
+    expect(removeList(before, 'l_1')).toBe(before);
+  });
+
+  it('returns the same state for an unknown id', () => {
+    const before = stateWithLists('Drogeria');
+    expect(removeList(before, 'l_404')).toBe(before);
+  });
+
+  it('keeps categories and their memory', () => {
+    let state = setItemCategory(stateWithLists('Drogeria'), 'i_1', 'c_drinks');
+    state = removeList(state, 'l_1');
+    expect(state.categories).toEqual(DEFAULT_CATEGORIES);
+    expect(state.categoryMemory).toEqual({ mleko: 'c_drinks' });
+  });
+
+  it('does not mutate the previous state', () => {
+    const before = stateWithLists('Drogeria');
+    const snapshot = structuredClone(before);
+    removeList(before, 'l_1');
+    expect(before).toEqual(snapshot);
+  });
+});
+
+describe('moveList', () => {
+  it('moves a list', () => {
+    const state = moveList(stateWithLists('Drogeria', 'Apteka'), 'l_3', 0);
+    expect(listNames(state)).toEqual(['Apteka', 'Zakupy', 'Drogeria']);
+    expect(state.activeListId).toBe('l_1');
+  });
+
+  it('treats an index past either end as the first or the last place', () => {
+    const start = stateWithLists('Drogeria', 'Apteka');
+    expect(moveList(start, 'l_2', -5).lists[0].id).toBe('l_2');
+    expect(moveList(start, 'l_2', 99).lists.at(-1).id).toBe('l_2');
+  });
+
+  it('returns the same state for an unknown id or the same position', () => {
+    const before = stateWithLists('Drogeria');
+    expect(moveList(before, 'l_404', 0)).toBe(before);
+    expect(moveList(before, 'l_1', 0)).toBe(before);
+  });
+
+  it('does not mutate the previous state', () => {
+    const before = stateWithLists('Drogeria');
+    const snapshot = structuredClone(before);
+    moveList(before, 'l_2', 0);
+    expect(before).toEqual(snapshot);
+  });
+});
+
+describe('setActiveList', () => {
+  it('switches the active list', () => {
+    const state = setActiveList(stateWithLists('Drogeria'), 'l_2');
+    expect(state.activeListId).toBe('l_2');
+    expect(getActiveList(state).name).toBe('Drogeria');
+  });
+
+  it('returns the same state for an unknown id or the already active list', () => {
+    const before = stateWithLists('Drogeria');
+    expect(setActiveList(before, 'l_404')).toBe(before);
+    expect(setActiveList(before, 'l_1')).toBe(before);
+  });
+});
+
+describe('product actions with several lists', () => {
+  // Zakupy: mleko (bought), chleb. Drogeria (active): szampon.
+  function twoLists() {
+    let state = stateWith('mleko', 'chleb');
+    state = toggleItem(state, 'i_1', 9000);
+    state = addList(state, 'Drogeria', 'l_2').state;
+    state = setActiveList(state, 'l_2');
+    return addItem(state, 'szampon', { id: 'i_3', now: 9500 }).state;
+  }
+
+  function otherList(state) {
+    return state.lists.find((list) => list.id === 'l_1');
+  }
+
+  it('adds to the active list only', () => {
+    expect(names(items(twoLists()))).toEqual(['szampon']);
+    expect(names(otherList(twoLists()).items)).toEqual(['mleko', 'chleb']);
+  });
+
+  it('allows the same product on several lists', () => {
+    const result = addItem(twoLists(), 'chleb', { id: 'i_9', now: 10000 });
+    expect(result.status).toBe('added');
+    expect(names(items(result.state))).toEqual(['szampon', 'chleb']);
+  });
+
+  it('clears bought items on the active list only', () => {
+    let state = toggleItem(twoLists(), 'i_3', 10000);
+    state = clearChecked(state);
+    expect(items(state)).toEqual([]);
+    expect(names(otherList(state).items)).toEqual(['mleko', 'chleb']);
+  });
+
+  it('shares category memory between lists', () => {
+    let state = setItemCategory(twoLists(), 'i_3', 'c_pantry');
+    state = setActiveList(state, 'l_1');
+    state = addItem(state, 'szampon', { id: 'i_9', now: 10000 }).state;
+    expect(items(state).at(-1).categoryId).toBe('c_pantry');
+  });
+
+  it('counts progress for each list separately', () => {
+    const state = twoLists();
+    expect(getProgress(otherList(state))).toEqual({ checked: 1, total: 2 });
+    expect(getProgress(getActiveList(state))).toEqual({ checked: 0, total: 1 });
   });
 });

@@ -11,6 +11,7 @@ import { PRODUCT_DICTIONARY } from './product-dictionary.js';
 export const DATA_VERSION = 2;
 export const MAX_NAME_LENGTH = 100;
 export const MAX_CATEGORY_NAME_LENGTH = 40;
+export const MAX_LIST_NAME_LENGTH = 40;
 
 export function createInitialState(listId) {
   return {
@@ -319,13 +320,31 @@ export function getProgress(list) {
 // Categories are shared by the whole app, not by one list, so these functions
 // change state.categories and, where needed, items in every list.
 
-// Category names are compared like product names, but without reading a
-// quantity: "Napoje 2" is a different category from "Napoje".
-function findCategoryByName(categories, name, ignoredId = null) {
+// Category and list names are compared like product names, but without reading
+// a quantity: "Napoje 2" is a different category from "Napoje".
+// entries: categories or lists, anything with an id and a name.
+function findByName(entries, name, ignoredId = null) {
   const normalized = normalizeName(name);
-  return categories.find(
-    (category) => category.id !== ignoredId && normalizeName(category.name) === normalized,
+  return entries.find(
+    (entry) => entry.id !== ignoredId && normalizeName(entry.name) === normalized,
   );
+}
+
+// Returns a copy of array with the entry of the given id moved to position
+// toIndex (0 = first); an index past either end means first or last.
+// Returns the same array when nothing moves (unknown id, same position),
+// so callers can return their unchanged state.
+function moveById(array, id, toIndex) {
+  const fromIndex = array.findIndex((entry) => entry.id === id);
+  if (fromIndex === -1) return array;
+
+  const targetIndex = Math.max(0, Math.min(toIndex, array.length - 1));
+  if (targetIndex === fromIndex) return array;
+
+  const moved = [...array];
+  const [entry] = moved.splice(fromIndex, 1);
+  moved.splice(targetIndex, 0, entry);
+  return moved;
 }
 
 // Returns { state, status, categoryId }. A new category goes to the end.
@@ -334,7 +353,7 @@ export function addCategory(state, rawName, id) {
   const name = rawName.trim();
   const error = validateName(name, MAX_CATEGORY_NAME_LENGTH);
   if (error) return { state, status: error, categoryId: null };
-  if (findCategoryByName(state.categories, name)) {
+  if (findByName(state.categories, name)) {
     return { state, status: 'duplicate', categoryId: null };
   }
 
@@ -353,7 +372,7 @@ export function renameCategory(state, categoryId, rawName) {
   const error = validateName(name, MAX_CATEGORY_NAME_LENGTH);
   if (error) return { state, status: error };
   // The category itself is ignored, so "napoje" → "Napoje" is allowed.
-  if (findCategoryByName(state.categories, name, categoryId)) {
+  if (findByName(state.categories, name, categoryId)) {
     return { state, status: 'duplicate' };
   }
 
@@ -394,14 +413,71 @@ export function removeCategory(state, categoryId) {
 // Moves a category to position toIndex (0 = first), like moveItem for products.
 // Returns the same state when nothing moves (unknown id, same position).
 export function moveCategory(state, categoryId, toIndex) {
-  const fromIndex = state.categories.findIndex((category) => category.id === categoryId);
-  if (fromIndex === -1) return state;
+  const categories = moveById(state.categories, categoryId, toIndex);
+  return categories === state.categories ? state : { ...state, categories };
+}
 
-  const targetIndex = Math.max(0, Math.min(toIndex, state.categories.length - 1));
-  if (targetIndex === fromIndex) return state;
+// ---------- Managing lists (spec 11) ----------
+// Every product action above works on the active list only; these functions
+// add, rename, remove and reorder whole lists and switch the active one.
+// Progress of any list (the "3/7" counter in the list picker) is getProgress(list).
 
-  const categories = [...state.categories];
-  const [moved] = categories.splice(fromIndex, 1);
-  categories.splice(targetIndex, 0, moved);
-  return { ...state, categories };
+function hasList(state, listId) {
+  return state.lists.some((list) => list.id === listId);
+}
+
+// Returns { state, status, listId }. A new list goes to the end and does not
+// become active, so the user can add several lists in a row (spec 11.3).
+// status: 'added' | 'empty' | 'too-long' | 'duplicate'
+export function addList(state, rawName, id) {
+  const name = rawName.trim();
+  const error = validateName(name, MAX_LIST_NAME_LENGTH);
+  if (error) return { state, status: error, listId: null };
+  if (findByName(state.lists, name)) {
+    return { state, status: 'duplicate', listId: null };
+  }
+
+  const newState = { ...state, lists: [...state.lists, { id, name, items: [] }] };
+  return { state: newState, status: 'added', listId: id };
+}
+
+// Returns { state, status }, like renameCategory.
+// status: 'renamed' | 'empty' | 'too-long' | 'duplicate' | 'not-found'
+export function renameList(state, listId, rawName) {
+  if (!hasList(state, listId)) return { state, status: 'not-found' };
+  const name = rawName.trim();
+  const error = validateName(name, MAX_LIST_NAME_LENGTH);
+  if (error) return { state, status: error };
+  if (findByName(state.lists, name, listId)) {
+    return { state, status: 'duplicate' };
+  }
+
+  const lists = state.lists.map((list) => (list.id === listId ? { ...list, name } : list));
+  return { state: { ...state, lists }, status: 'renamed' };
+}
+
+// Removes a list together with its items. The last list is never removed,
+// because there is always at least one (spec 11.1). When the active list goes,
+// the first remaining list becomes active.
+// Returns the same state for an unknown id or the last list.
+// Asking for confirmation when the list has items is up to the UI.
+export function removeList(state, listId) {
+  if (!hasList(state, listId) || state.lists.length === 1) return state;
+
+  const lists = state.lists.filter((list) => list.id !== listId);
+  const activeListId = state.activeListId === listId ? lists[0].id : state.activeListId;
+  return { ...state, activeListId, lists };
+}
+
+// Moves a list to position toIndex (0 = first), like moveCategory.
+export function moveList(state, listId, toIndex) {
+  const lists = moveById(state.lists, listId, toIndex);
+  return lists === state.lists ? state : { ...state, lists };
+}
+
+// Makes another list active. Returns the same state for an unknown id or the
+// list that is already active, so the UI can skip saving and rendering.
+export function setActiveList(state, listId) {
+  if (!hasList(state, listId) || state.activeListId === listId) return state;
+  return { ...state, activeListId: listId };
 }

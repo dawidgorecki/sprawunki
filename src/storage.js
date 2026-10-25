@@ -51,15 +51,23 @@ function isValidState(data) {
   if (!Array.isArray(data.lists)) return false;
   if (!areValidCategories(data.categories)) return false;
   if (!isValidCategoryMemory(data.categoryMemory)) return false;
+  if (!data.lists.some((list) => list?.id === data.activeListId)) return false;
+  // Every list, not only the active one: the list picker shows all names and
+  // counters, and the user can switch to any of them (spec 11.2).
+  return data.lists.every(isValidList);
+}
 
-  const activeList = data.lists.find((list) => list.id === data.activeListId);
-  if (!activeList || !Array.isArray(activeList.items)) return false;
-
-  return activeList.items.every(
-    (item) =>
-      typeof item.id === 'string' &&
-      typeof item.name === 'string' &&
-      typeof item.checked === 'boolean',
+function isValidList(list) {
+  return (
+    typeof list?.id === 'string' &&
+    typeof list?.name === 'string' &&
+    Array.isArray(list?.items) &&
+    list.items.every(
+      (item) =>
+        typeof item?.id === 'string' &&
+        typeof item?.name === 'string' &&
+        typeof item?.checked === 'boolean',
+    )
   );
 }
 
