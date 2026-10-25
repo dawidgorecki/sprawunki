@@ -103,11 +103,40 @@ h1 {
   font-size: 1.5rem;
 }
 
-/* Title with the progress below it; takes the free space and pushes the
+/* Title with the list name and the progress below it; takes the free space and pushes the
    buttons to the right. */
 .header-title {
   flex: 1;
   min-width: 0;
+}
+
+/* The active list's name under the title (spec 11.2): text with a ▾ rather
+   than a framed button, so the header stays calm. Long names are cut with "…". */
+#open-list-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+  min-height: 32px;
+  margin: 0.125rem 0 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* An element with its own display (flex above) would otherwise ignore the hidden attribute. */
+#open-list-picker[hidden] {
+  display: none;
+}
+
+.list-picker-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #progress {
@@ -492,11 +521,11 @@ li.highlight {
   cursor: pointer;
 }
 
-/* ---------- Categories and lists dialogs (spec 10.5, 11.3) ---------- */
+/* ---------- Dialogs: categories, lists, list picker (spec 10.5, 11.2, 11.3) ---------- */
 
-/* A native <dialog> opened with showModal(). It scrolls on its own when the
-   list of categories or lists is longer than the screen. */
-.manage-dialog {
+/* A native <dialog> opened with showModal(). It scrolls on its own when its
+   content is longer than the screen. */
+.app-dialog {
   width: calc(100% - 1.5rem);
   max-width: 560px;
   max-height: calc(100dvh - 2rem);
@@ -508,7 +537,7 @@ li.highlight {
   color: var(--color-text);
 }
 
-.manage-dialog::backdrop {
+.app-dialog::backdrop {
   background: rgb(0 0 0 / 0.45);
 }
 
@@ -609,4 +638,54 @@ li.highlight {
 .dialog-message:not(:empty) {
   margin-top: 0.5rem;
   padding: 0.625rem 0.875rem;
+}
+
+/* ---------- List picker (spec 11.2) ---------- */
+
+/* A card like the other lists (the general ul rule). The dialog has no bottom
+   padding (see .app-dialog), so the card keeps its distance from the edge here. */
+#list-picker-options {
+  margin-bottom: 1rem;
+}
+
+/* A whole row is one big button: easy to hit with a thumb. */
+.list-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 52px;
+  /* Vertical padding for long names that wrap to two lines. */
+  padding: 0.5rem 0.75rem 0.5rem 0.5rem;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.list-option[aria-current='true'] {
+  font-weight: 700;
+}
+
+/* Fixed width, so names line up whether or not the row has the ✓. */
+.list-option-check {
+  flex-shrink: 0;
+  width: 1.25rem;
+  color: var(--color-accent);
+  text-align: center;
+}
+
+.list-option-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.list-option-counter {
+  flex-shrink: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
 }

@@ -14,6 +14,7 @@ import {
 import { enableDragging } from './drag.js';
 import { startEditing, createHandle, moveWithArrowKeys, findRow } from './list-controls.js';
 import { createManageDialog } from './manage-dialog.js';
+import { createListPicker } from './list-picker.js';
 
 const MESSAGE_DURATION_MS = 5000;
 
@@ -22,7 +23,7 @@ const MESSAGE_DURATION_MS = 5000;
 //             onSetCategory(itemId, categoryId), onClearChecked(), onToggleWakeLock(),
 //             onAddCategory(name), onRenameCategory(categoryId, name),
 //             onRemoveCategory(categoryId), onMoveCategory(categoryId, toIndex),
-//             onAddList(name), onRenameList(listId, name),
+//             onSelectList(listId), onAddList(name), onRenameList(listId, name),
 //             onRemoveList(listId), onMoveList(listId, toIndex) }
 // Returns functions main.js uses to update the screen.
 export function createUI(handlers) {
@@ -99,6 +100,7 @@ export function createUI(handlers) {
     onRemove: handlers.onRemoveCategory,
     onMove: handlers.onMoveCategory,
   });
+  const listPicker = createListPicker(handlers.onSelectList);
   const listsDialog = createManageDialog(document.getElementById('lists-dialog'), {
     openButton: document.getElementById('open-lists'),
     maxLength: MAX_LIST_NAME_LENGTH,
@@ -146,6 +148,7 @@ export function createUI(handlers) {
     render(state) {
       render(elements, state);
       categoriesDialog.render(state.categories);
+      listPicker.render(state);
       // There is always at least one list, so the last one can't be removed.
       listsDialog.render(state.lists, { canRemove: state.lists.length > 1 });
     },

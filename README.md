@@ -67,6 +67,7 @@ src/
   storage.js       # zapis i odczyt localStorage, migracje, kopia uszkodzonych danych
   ui.js            # renderowanie i obsługa zdarzeń
   manage-dialog.js       # okna zarządzania kategoriami i listami
+  list-picker.js         # przycisk z nazwą listy i okno wyboru listy
   list-controls.js       # wspólne dla list: edycja nazwy w miejscu, uchwyt, strzałki
   drag.js          # zmiana kolejności przeciąganiem (Pointer Events)
   wake-lock.js     # blokada wygaszania ekranu (Screen Wake Lock API)

@@ -41,6 +41,7 @@ src/
   storage.js     # odczyt/zapis localStorage, migracje, obsługa błędów
   ui.js          # renderowanie i obsługa zdarzeń DOM
   manage-dialog.js      # okna zarządzania kategoriami (2.0) i listami (2.1)
+  list-picker.js        # przycisk z nazwą listy i okno wyboru listy (wersja 2.1)
   list-controls.js      # wspólne dla list: edycja nazwy w miejscu, uchwyt, strzałki
   drag.js        # zmiana kolejności przeciąganiem (wersja 1.1)
   wake-lock.js   # blokada wygaszania ekranu (wersja 1.1)

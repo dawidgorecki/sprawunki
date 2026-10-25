@@ -19,6 +19,7 @@ import {
   renameList,
   removeList,
   moveList,
+  setActiveList,
 } from './store.js';
 import { loadState, saveState } from './storage.js';
 import { createUI } from './ui.js';
@@ -150,7 +151,16 @@ const ui = createUI({
     }
   },
 
-  // ----- Lists dialog (spec 11.3) -----
+  // ----- Lists (spec 11.2, 11.3) -----
+
+  // Like any change, switching hides an earlier "Cofnij" (in update()): it
+  // would bring back a product on a list that is no longer shown.
+  onSelectList(listId) {
+    const newState = setActiveList(state, listId);
+    if (newState !== state) {
+      update(newState);
+    }
+  },
 
   // A new list does not become active, so several can be added in a row.
   onAddList(name) {

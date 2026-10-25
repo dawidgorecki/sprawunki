@@ -25,6 +25,11 @@
     <header>
       <div class="header-title">
         <h1>Sprawunki</h1>
+        <!-- Opens the list picker below (spec 11.2). Hidden by list-picker.js while there is only one list. -->
+        <button type="button" id="open-list-picker" aria-haspopup="dialog" hidden>
+          <span class="list-picker-name"></span>
+          <span aria-hidden="true">▾</span>
+        </button>
         <p id="progress" hidden></p>
       </div>
       <!-- Opens the lists dialog below (spec 11.3). Always shown: it is the only way to add a list. -->
@@ -145,7 +150,7 @@
     </footer>
 
     <!-- Managing categories (spec 10.5); filled and wired by manage-dialog.js. -->
-    <dialog id="categories-dialog" class="manage-dialog" aria-labelledby="categories-title">
+    <dialog id="categories-dialog" class="app-dialog" aria-labelledby="categories-title">
       <!-- Sticks to the top while the dialog scrolls, so "Gotowe" and messages stay in view. -->
       <div class="dialog-header">
         <div class="dialog-title-row">
@@ -172,7 +177,7 @@
     </dialog>
 
     <!-- Managing lists (spec 11.3), built like the categories dialog; filled and wired by manage-dialog.js. -->
-    <dialog id="lists-dialog" class="manage-dialog" aria-labelledby="lists-title">
+    <dialog id="lists-dialog" class="app-dialog" aria-labelledby="lists-title">
       <!-- Sticks to the top while the dialog scrolls, so "Gotowe" and messages stay in view. -->
       <div class="dialog-header">
         <div class="dialog-title-row">
@@ -196,6 +201,17 @@
         <!-- Short visible text leaves room for the field on narrow phones. -->
         <button type="submit" aria-label="Dodaj listę">Dodaj</button>
       </form>
+    </dialog>
+
+    <!-- Switching lists (spec 11.2); filled and wired by list-picker.js. -->
+    <dialog id="list-picker" class="app-dialog" aria-labelledby="list-picker-title">
+      <div class="dialog-header">
+        <div class="dialog-title-row">
+          <h2 id="list-picker-title">Wybierz listę</h2>
+          <button type="button" class="dialog-close">Zamknij</button>
+        </div>
+      </div>
+      <ul id="list-picker-options"></ul>
     </dialog>
 
     <!-- Tag icon of the category picker next to every "to buy" item; cloned by ui.js. -->
