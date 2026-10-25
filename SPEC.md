@@ -275,7 +275,7 @@ Produkty do kupienia są pogrupowane według działów sklepu, w kolejności, w 
   - uchwyt ≡: przeciąganie i strzałki jak w 9.2;
   - nazwa: tapnięcie włącza edycję w miejscu (jak 3.5; pusta nazwa przywraca poprzednią, duplikat jest odrzucany z komunikatem);
   - przycisk usuwania ×.
-- Pod listą jest pole i przycisk „Dodaj kategorię”. Nowa kategoria trafia na koniec.
+- Pod listą jest pole i przycisk „Dodaj kategorię”, przyklejone do dołu okna (jak pole dodawania produktu na ekranie głównym), więc są widoczne bez przewijania. Nowa kategoria trafia na koniec i okno przewija się tak, żeby była widoczna.
 - **Usuwanie:**
   - nieużywana kategoria jest usuwana od razu;
   - jeśli należą do niej jakieś produkty, aplikacja pyta o potwierdzenie (`confirm()`: „Produkty z tej kategorii trafią do „Bez kategorii”. Usunąć?”). Po usunięciu produkty mają `categoryId: null`.

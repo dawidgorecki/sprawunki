@@ -10,6 +10,11 @@ import {
   moveItem,
   setItemCategory,
   clearChecked,
+  addCategory,
+  renameCategory,
+  isCategoryUsed,
+  removeCategory,
+  moveCategory,
 } from './store.js';
 import { loadState, saveState } from './storage.js';
 import { createUI } from './ui.js';
@@ -98,6 +103,47 @@ const ui = createUI({
 
   onClearChecked() {
     updateWithUndo(clearChecked(state), 'Wyczyszczono kupione produkty.');
+  },
+
+  // ----- Categories dialog (spec 10.5) -----
+
+  onAddCategory(name) {
+    const result = addCategory(state, name, createId('c_'));
+    if (result.status === 'added') {
+      update(result.state);
+    } else if (result.status === 'duplicate') {
+      ui.showCategoryMessage('Taka kategoria już jest.');
+    }
+  },
+
+  // On 'empty' the dialog has already restored the old name, as with products.
+  onRenameCategory(categoryId, name) {
+    const result = renameCategory(state, categoryId, name);
+    if (result.status === 'renamed') {
+      update(result.state);
+    } else if (result.status === 'duplicate') {
+      ui.showCategoryMessage('Taka kategoria już jest.');
+    }
+  },
+
+  // No "Cofnij" here: the dialog covers the message bar. So a category that
+  // still has products is removed only after a confirmation.
+  onRemoveCategory(categoryId) {
+    const category = state.categories.find((c) => c.id === categoryId);
+    if (
+      isCategoryUsed(state, categoryId) &&
+      !confirm(`Usunąć kategorię „${category.name}”? Produkty z tej kategorii trafią do „Bez kategorii”.`)
+    ) {
+      return;
+    }
+    update(removeCategory(state, categoryId));
+  },
+
+  onMoveCategory(categoryId, toIndex) {
+    const newState = moveCategory(state, categoryId, toIndex);
+    if (newState !== state) {
+      update(newState);
+    }
   },
 
   // Not part of the list state: the switch is not saved (spec 9.3).

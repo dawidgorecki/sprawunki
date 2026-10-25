@@ -92,8 +92,8 @@ input {
 
 header {
   display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.5rem;
   /* safe-area-inset-top: room for the status bar / notch when installed as an app. */
   padding: calc(0.75rem + env(safe-area-inset-top)) 0.75rem 0.5rem;
 }
@@ -103,21 +103,27 @@ h1 {
   font-size: 1.5rem;
 }
 
-/* margin-left: auto pushes the progress and the wake lock switch to the right. */
+/* Title with the progress below it; takes the free space and pushes the
+   buttons to the right. */
+.header-title {
+  flex: 1;
+  min-width: 0;
+}
+
 #progress {
-  margin: 0 0 0 auto;
+  margin: 0.125rem 0 0;
+  font-size: 0.875rem;
   color: var(--color-muted);
 }
 
-/* Wake lock switch (spec 9.3): outlined when off, filled with the accent when on. */
-#wake-lock {
-  align-self: center;
+/* Round icon buttons on the right: categories (spec 10.5) and the wake lock
+   switch (spec 9.3), which is outlined when off and filled when on. */
+.header-button {
   display: grid;
   place-items: center;
   flex-shrink: 0;
   width: 44px;
   height: 44px;
-  margin-left: auto;
   padding: 0;
   border: 1px solid var(--color-border-strong);
   border-radius: 50%;
@@ -126,19 +132,14 @@ h1 {
   cursor: pointer;
 }
 
-/* When the progress is visible it already takes the free space on the left. */
-#progress:not([hidden]) + #wake-lock {
-  margin-left: 0;
-}
-
-#wake-lock[aria-pressed='true'] {
+.header-button[aria-pressed='true'] {
   border-color: var(--color-accent);
   background: var(--color-accent);
   color: var(--color-on-accent);
 }
 
 /* An element with its own display (grid above) would otherwise ignore the hidden attribute. */
-#wake-lock[hidden] {
+.header-button[hidden] {
   display: none;
 }
 
@@ -256,14 +257,17 @@ li + li {
   user-select: none;
 }
 
-/* Items stepping aside while another one is dragged past them. */
-#to-buy-groups li {
+/* Rows stepping aside while another one is dragged past them: products and,
+   in their dialog, categories. */
+#to-buy-groups li,
+#category-list li {
   transition: transform 150ms ease;
 }
 
 /* The dragged item follows the finger directly, so no transition here. Its own
    background covers the items it passes over. */
-#to-buy-groups li.dragging {
+#to-buy-groups li.dragging,
+#category-list li.dragging {
   position: relative;
   z-index: 1;
   background: var(--color-surface);
@@ -282,7 +286,8 @@ body.is-dragging .item-handle {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #to-buy-groups li {
+  #to-buy-groups li,
+  #category-list li {
     transition: none;
   }
 }
@@ -479,4 +484,123 @@ li.highlight {
   color: var(--color-on-accent);
   font-weight: 600;
   cursor: pointer;
+}
+
+/* ---------- Categories dialog (spec 10.5) ---------- */
+
+/* A native <dialog> opened with showModal(). It scrolls on its own when the
+   list of categories is longer than the screen. */
+#categories-dialog {
+  width: calc(100% - 1.5rem);
+  max-width: 560px;
+  max-height: calc(100dvh - 2rem);
+  /* No bottom padding: the add form sticks to the very bottom and has its own. */
+  padding: 0 1rem;
+  border: none;
+  border-radius: 16px;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+#categories-dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+/* Stays at the top while the dialog scrolls, so "Gotowe" and messages are always in view. */
+.dialog-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 1rem 0 0.5rem;
+  background: var(--color-bg);
+}
+
+.dialog-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--color-text);
+}
+
+#close-categories {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dialog-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+/* Sticks to the bottom while the dialog scrolls, like the add form of the
+   main screen, so a new category can be added without scrolling down. */
+#add-category-form {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0 1rem;
+  background: var(--color-bg);
+}
+
+/* scrollIntoView() ignores the sticky header and form, so without this margin
+   a row scrolled into view would end up hidden under one of them. */
+#category-list li {
+  scroll-margin: 5.5rem 0 5rem;
+}
+
+/* The same look as the field for new products. */
+#new-category-name {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 0.875rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  background: var(--color-surface);
+  font-size: 1rem;
+}
+
+#add-category-form button {
+  min-height: 48px;
+  padding: 0 1.25rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 10px;
+  background: none;
+  color: var(--color-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Like the message bar of the main screen. Takes no room while empty; the <p>
+   stays in the DOM so screen readers keep announcing new text put into it. */
+#categories-message {
+  margin: 0;
+  border-radius: 10px;
+  background: var(--color-message-bg);
+  color: var(--color-message-text);
+}
+
+#categories-message:not(:empty) {
+  margin-top: 0.5rem;
+  padding: 0.625rem 0.875rem;
 }

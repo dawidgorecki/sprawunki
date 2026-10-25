@@ -2,14 +2,17 @@
 // or how the state changes: it draws the state it is given and reports user
 // actions to the handlers passed in from main.js.
 
-import { getActiveList, getSections, getProgress, parseQuantity } from './store.js';
+import { getActiveList, getSections, getProgress, parseQuantity, MAX_NAME_LENGTH } from './store.js';
 import { enableDragging } from './drag.js';
+import { startEditing, createHandle, moveWithArrowKeys, findRow } from './list-controls.js';
+import { createCategoriesDialog } from './categories-dialog.js';
 
 const MESSAGE_DURATION_MS = 5000;
 
 // handlers: { onAdd(name), onToggle(itemId), onRename(itemId, name),
 //             onRemove(itemId), onMove(itemId, toIndex),
-//             onSetCategory(itemId, categoryId), onClearChecked(), onToggleWakeLock() }
+//             onSetCategory(itemId, categoryId), onClearChecked(), onToggleWakeLock(),
+//             and the category handlers listed in categories-dialog.js }
 // Returns functions main.js uses to update the screen.
 export function createUI(handlers) {
   const elements = {
@@ -45,11 +48,11 @@ export function createUI(handlers) {
     if (event.target.matches('.item-checkbox')) {
       handlers.onToggle(itemId);
       // Render replaced the checkbox with a new element; keep keyboard focus on it.
-      findItemElement(itemId)?.querySelector('.item-checkbox').focus();
+      findRow(itemId)?.querySelector('.item-checkbox').focus();
     } else if (event.target.matches('.item-category select')) {
       // An <option> value is always a string, so "Bez kategorii" uses '' for null.
       handlers.onSetCategory(itemId, event.target.value || null);
-      findItemElement(itemId)?.querySelector('.item-category select').focus();
+      findRow(itemId)?.querySelector('.item-category select').focus();
     }
   });
 
@@ -59,30 +62,22 @@ export function createUI(handlers) {
     const nameButton = event.target.closest('.item-name');
 
     if (nameButton) {
-      startEditing(nameButton, itemId, handlers.onRename);
+      startEditing(nameButton, {
+        maxLength: MAX_NAME_LENGTH,
+        label: 'Nazwa produktu',
+        onSave: (name) => handlers.onRename(itemId, name),
+      });
     } else if (event.target.matches('.item-remove')) {
       handlers.onRemove(itemId);
     }
   });
 
-  // Arrow keys on a reorder handle move the item one place up or down (spec 9.2).
-  main.addEventListener('keydown', (event) => {
-    if (!event.target.matches('.item-handle')) return;
-    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
-
-    event.preventDefault(); // otherwise the arrow keys also scroll the page
-    const li = event.target.closest('li');
-    // Each group is its own <ul>, so the position among the siblings is the
-    // position within the group, which moveItem expects.
-    const index = [...li.parentElement.children].indexOf(li);
-    const toIndex = event.key === 'ArrowUp' ? index - 1 : index + 1;
-
-    handlers.onMove(li.dataset.id, toIndex);
-    // Render replaced the handle with a new element; keep keyboard focus on it.
-    findItemElement(li.dataset.id)?.querySelector('.item-handle').focus();
-  });
-
+  // Each group is its own <ul>, so the position within the <ul> is the
+  // position within the group, which moveItem expects.
+  main.addEventListener('keydown', (event) => moveWithArrowKeys(event, handlers.onMove));
   enableDragging(elements.toBuyGroups, handlers.onMove);
+
+  const categoriesDialog = createCategoriesDialog(handlers);
 
   elements.wakeLock.addEventListener('click', () => handlers.onToggleWakeLock());
 
@@ -119,6 +114,13 @@ export function createUI(handlers) {
   return {
     render(state) {
       render(elements, state);
+      categoriesDialog.render(state.categories);
+    },
+
+    // For messages about categories while their dialog is open: the dialog
+    // covers the message bar at the bottom of the screen.
+    showCategoryMessage(text) {
+      categoriesDialog.showMessage(text);
     },
 
     // persistent: the message stays until the user closes it with "OK"; use it for
@@ -153,7 +155,7 @@ export function createUI(handlers) {
 
     // Used when the user tries to add a product that is already on the list.
     highlightItem(itemId) {
-      const element = findItemElement(itemId);
+      const element = findRow(itemId);
       if (!element) return;
 
       element.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -163,52 +165,6 @@ export function createUI(handlers) {
       });
     },
   };
-}
-
-// Swaps the name button for a text field. Enter or leaving the field saves,
-// Escape cancels. The button is always put back first; if the rename succeeds,
-// the following render replaces it with the new name anyway. This way a
-// rejected name (empty, duplicate) needs no extra code to restore.
-function startEditing(nameButton, itemId, onRename) {
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'item-name-input';
-  input.maxLength = 100;
-  // The full name as typed ("mleko 2 l"), not the button's text, which is split into parts.
-  input.value = nameButton.dataset.fullName;
-  input.setAttribute('aria-label', 'Nazwa produktu');
-
-  // Removing a focused field can fire "blur" in some browsers, which would
-  // finish the edit a second time. This flag makes finishing happen only once.
-  let finished = false;
-
-  function finish({ save, keepFocus }) {
-    if (finished) return;
-    finished = true;
-
-    input.replaceWith(nameButton);
-    if (save) {
-      onRename(itemId, input.value);
-    }
-    if (keepFocus) {
-      findItemElement(itemId)?.querySelector('.item-name').focus();
-    }
-  }
-
-  input.addEventListener('keydown', (event) => {
-    if (event.key !== 'Enter' && event.key !== 'Escape') return;
-
-    // finish() moves focus to the name button. Without preventDefault the same
-    // Enter key press would then "click" that button and reopen the editor.
-    event.preventDefault();
-    finish({ save: event.key === 'Enter', keepFocus: true });
-  });
-  // Tapping elsewhere: save, but don't pull focus back from where the user went.
-  input.addEventListener('blur', () => finish({ save: true, keepFocus: false }));
-
-  nameButton.replaceWith(input);
-  input.focus();
-  input.setSelectionRange(input.value.length, input.value.length); // cursor at the end
 }
 
 function render(elements, state) {
@@ -288,7 +244,7 @@ function createItemElement(item, categoryPicker = null) {
   remove.setAttribute('aria-label', `Usuń: ${item.name}`);
 
   if (!item.checked) {
-    li.append(createHandle(item));
+    li.append(createHandle(`Zmień kolejność: ${item.name}`));
   }
   li.append(checkbox, name);
   if (categoryPicker) {
@@ -325,16 +281,6 @@ function createCategoryPicker(item, categories, selectedId) {
   return wrapper;
 }
 
-function createHandle(item) {
-  const handle = document.createElement('button');
-  handle.type = 'button';
-  handle.className = 'item-handle';
-  handle.textContent = '≡';
-  handle.setAttribute('aria-label', `Zmień kolejność: ${item.name}`);
-  handle.setAttribute('aria-describedby', 'move-hint');
-  return handle;
-}
-
 // "mleko 2 l" → <span>mleko</span> <span class="item-quantity">2 l</span>
 function createNameParts(fullName) {
   const { name, quantity } = parseQuantity(fullName);
@@ -347,9 +293,4 @@ function createNameParts(fullName) {
   label.textContent = quantity;
   // The space keeps the parts apart for screen readers and when copying text.
   return [text, ' ', label];
-}
-
-function findItemElement(itemId) {
-  // CSS.escape: the id goes into a selector, so special characters must be escaped.
-  return document.querySelector(`li[data-id="${CSS.escape(itemId)}"]`);
 }

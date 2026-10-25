@@ -40,6 +40,8 @@ src/
   store.js       # logika listy — czyste funkcje, bez DOM i localStorage
   storage.js     # odczyt/zapis localStorage, migracje, obsługa błędów
   ui.js          # renderowanie i obsługa zdarzeń DOM
+  categories-dialog.js  # okno zarządzania kategoriami (wersja 2.0)
+  list-controls.js      # wspólne dla list: edycja nazwy w miejscu, uchwyt, strzałki
   drag.js        # zmiana kolejności przeciąganiem (wersja 1.1)
   wake-lock.js   # blokada wygaszania ekranu (wersja 1.1)
   product-dictionary.js  # słownik produkt → kategoria domyślna (wersja 2.0, same dane)

@@ -2,47 +2,22 @@
 // keyboard, mouse and finger. Most tests use dairy products, so they share a group.
 
 import { test, expect } from '@playwright/test';
-import { openApp, addItems, expectToBuy, boughtNames, groupTitles } from './helpers.js';
+import {
+  openApp,
+  addItems,
+  expectToBuy,
+  boughtNames,
+  groupTitles,
+  dragHandle,
+} from './helpers.js';
 
 function handle(page, name) {
   return page.getByRole('button', { name: `Zmień kolejność: ${name}` });
 }
 
-// Drags the handle of `name` onto the row of `targetName`, a bit past its middle,
-// because the dragged item takes a place only after crossing the other item's middle.
-// Uses the mouse on the desktop and a real touch gesture on the phone.
-async function drag(page, isMobile, name, targetName) {
-  const from = await handle(page, name).boundingBox();
-  const target = await page.locator('#to-buy-section li', { hasText: targetName }).boundingBox();
-  const startX = from.x + from.width / 2;
-  const startY = from.y + from.height / 2;
-  const goingDown = target.y > from.y;
-  const endY = target.y + target.height / 2 + (goingDown ? 10 : -10);
-
-  if (isMobile) {
-    await touchDrag(page, startX, startY, endY);
-  } else {
-    await page.mouse.move(startX, startY);
-    await page.mouse.down();
-    await page.mouse.move(startX, endY, { steps: 10 });
-    await page.mouse.up();
-  }
-}
-
-// Playwright's page.touchscreen can only tap, so the gesture goes straight to
-// Chromium's DevTools protocol. Chromium turns these touches into pointer events,
-// exactly as on a phone, so this also checks `touch-action: none` on the handle.
-async function touchDrag(page, x, startY, endY) {
-  const cdp = await page.context().newCDPSession(page);
-  const touch = (type, y) =>
-    cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] });
-
-  await touch('touchStart', startY);
-  const steps = 10;
-  for (let i = 1; i <= steps; i++) {
-    await touch('touchMove', startY + ((endY - startY) * i) / steps);
-  }
-  await touch('touchEnd');
+function drag(page, isMobile, name, targetName) {
+  const target = page.locator('#to-buy-section li', { hasText: targetName });
+  return dragHandle(page, isMobile, handle(page, name), target);
 }
 
 test.beforeEach(async ({ page }) => {

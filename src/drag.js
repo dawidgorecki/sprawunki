@@ -7,7 +7,7 @@
 // position goes to onMove(itemId, toIndex), and the following render draws the
 // list from the new state, which also removes all the temporary transforms.
 
-const EDGE_SIZE = 64; // px from the top of the screen or the bottom bar where auto-scroll starts
+const EDGE_SIZE = 64; // px from the top or the bottom of the visible area where auto-scroll starts
 const MAX_SCROLL_SPEED = 12; // px per animation frame, reached right at the edge
 
 // container: an element that stays on the page and holds the lists, which are
@@ -31,12 +31,13 @@ function startDrag(list, handle, startEvent, onMove) {
   const draggedItem = handle.closest('li');
   const items = [...list.children];
   const fromIndex = items.indexOf(draggedItem);
+  const scroller = getScroller(list);
 
-  // Measured once, in page coordinates (screen position + scroll), so the values
-  // stay right while the page scrolls under the finger.
+  // Measured once, in content coordinates (screen position + scroll), so the
+  // values stay right while the content scrolls under the finger.
   const boxes = items.map((item) => {
     const rect = item.getBoundingClientRect();
-    return { top: rect.top + window.scrollY, height: rect.height };
+    return { top: rect.top + scroller.offset(), height: rect.height };
   });
   const dragged = boxes[fromIndex];
   const lastBox = boxes[boxes.length - 1];
@@ -44,7 +45,7 @@ function startDrag(list, handle, startEvent, onMove) {
   const minShift = boxes[0].top - dragged.top;
   const maxShift = lastBox.top + lastBox.height - (dragged.top + dragged.height);
 
-  const startY = startEvent.clientY + window.scrollY;
+  const startY = startEvent.clientY + scroller.offset();
   let pointerY = startEvent.clientY; // on screen; updated on every move
   let toIndex = fromIndex;
   let finished = false;
@@ -70,7 +71,7 @@ function startDrag(list, handle, startEvent, onMove) {
   let frame = requestAnimationFrame(autoScroll);
 
   function updatePositions() {
-    const shift = clamp(pointerY + window.scrollY - startY, minShift, maxShift);
+    const shift = clamp(pointerY + scroller.offset() - startY, minShift, maxShift);
     draggedItem.style.transform = `translateY(${shift}px)`;
 
     toIndex = findTargetIndex(boxes, fromIndex, dragged.top + dragged.height / 2 + shift);
@@ -85,19 +86,19 @@ function startDrag(list, handle, startEvent, onMove) {
     });
   }
 
-  // Runs on every animation frame while dragging. Near an edge it scrolls the
-  // page, faster the closer the finger is to the edge.
+  // Runs on every animation frame while dragging. Near an edge it scrolls,
+  // faster the closer the finger is to the edge.
   function autoScroll() {
-    const bottomEdge = document.querySelector('.bottom-bar').getBoundingClientRect().top;
+    const { top, bottom } = scroller.visibleArea();
     let speed = 0;
-    if (pointerY < EDGE_SIZE) {
-      speed = -MAX_SCROLL_SPEED * Math.min(1, (EDGE_SIZE - pointerY) / EDGE_SIZE);
-    } else if (pointerY > bottomEdge - EDGE_SIZE) {
-      speed = MAX_SCROLL_SPEED * Math.min(1, (pointerY - (bottomEdge - EDGE_SIZE)) / EDGE_SIZE);
+    if (pointerY < top + EDGE_SIZE) {
+      speed = -MAX_SCROLL_SPEED * Math.min(1, (top + EDGE_SIZE - pointerY) / EDGE_SIZE);
+    } else if (pointerY > bottom - EDGE_SIZE) {
+      speed = MAX_SCROLL_SPEED * Math.min(1, (pointerY - (bottom - EDGE_SIZE)) / EDGE_SIZE);
     }
 
     if (speed !== 0) {
-      window.scrollBy(0, speed);
+      scroller.scrollBy(speed);
       // The page moved under a finger that stood still, so the item has to follow.
       updatePositions();
     }
@@ -118,6 +119,31 @@ function startDrag(list, handle, startEvent, onMove) {
       onMove(draggedItem.dataset.id, toIndex);
     }
   }
+}
+
+// What scrolls under the list: the whole page, or an open <dialog> (the
+// categories dialog), which scrolls on its own while the page stays still.
+//   offset()      – how far it is scrolled now
+//   scrollBy(dy)  – scroll by dy pixels
+//   visibleArea() – top and bottom of the visible part, on screen
+function getScroller(list) {
+  const dialog = list.closest('dialog');
+  if (dialog) {
+    return {
+      offset: () => dialog.scrollTop,
+      scrollBy: (dy) => dialog.scrollBy(0, dy),
+      visibleArea: () => dialog.getBoundingClientRect(),
+    };
+  }
+  return {
+    offset: () => window.scrollY,
+    scrollBy: (dy) => window.scrollBy(0, dy),
+    // The bottom bar (add form) covers the page, so the visible part ends above it.
+    visibleArea: () => ({
+      top: 0,
+      bottom: document.querySelector('.bottom-bar').getBoundingClientRect().top,
+    }),
+  };
 }
 
 // The dragged item takes the place of the farthest item whose middle it has reached.
