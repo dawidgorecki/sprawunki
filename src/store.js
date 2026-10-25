@@ -246,44 +246,54 @@ export function clearChecked(state) {
   return updateActiveItems(state, (items) => items.filter((item) => !item.checked));
 }
 
-// Moves an item to position toIndex within "to buy" (0 = top). Bought items keep
-// their places in the array, so an item unchecked later returns where it was.
+// The category an item is shown under: its categoryId, or null ("Bez kategorii")
+// when it has none or its category was deleted (spec 10.6).
+function shownCategoryId(item, categories) {
+  return categories.some((category) => category.id === item.categoryId) ? item.categoryId : null;
+}
+
+// Moves an item to position toIndex within its group of "to buy" items (0 = top
+// of the group), so it never leaves its category (spec 10.3). All other items –
+// other groups and bought ones – keep their places in the array, so an item
+// unchecked later returns where it was.
 // Returns the same state when nothing moves (bought or unknown item, same position).
 export function moveItem(state, itemId, toIndex) {
   const items = getActiveList(state).items;
-  const toBuy = items.filter((item) => !item.checked);
-  const fromIndex = toBuy.findIndex((item) => item.id === itemId);
-  if (fromIndex === -1) return state;
+  const item = items.find((i) => i.id === itemId);
+  if (!item || item.checked) return state;
+
+  const groupId = shownCategoryId(item, state.categories);
+  const inGroup = (i) => !i.checked && shownCategoryId(i, state.categories) === groupId;
+  const group = items.filter(inGroup);
+  const fromIndex = group.indexOf(item);
 
   // An index past either end means "to the top" or "to the bottom".
-  const targetIndex = Math.max(0, Math.min(toIndex, toBuy.length - 1));
+  const targetIndex = Math.max(0, Math.min(toIndex, group.length - 1));
   if (targetIndex === fromIndex) return state;
 
-  const reordered = [...toBuy];
-  const [moved] = reordered.splice(fromIndex, 1);
-  reordered.splice(targetIndex, 0, moved);
+  const reordered = [...group];
+  reordered.splice(fromIndex, 1);
+  reordered.splice(targetIndex, 0, item);
 
-  // Put the reordered "to buy" items back into the slots that "to buy" items
-  // used before, leaving every bought item exactly where it was.
+  // Put the reordered group back into the array slots the group used before,
+  // leaving every other item exactly where it was.
   let next = 0;
-  return updateActiveItems(state, () =>
-    items.map((item) => (item.checked ? item : reordered[next++])),
-  );
+  return updateActiveItems(state, () => items.map((i) => (inGroup(i) ? reordered[next++] : i)));
 }
 
 // Splits items into what is shown on screen:
-// toBuy  – all "to buy" items in the order of the items array: the order they
-//          were added (newest last), unless the user moved them (spec 9.2);
-// groups – the same items split by category (spec 10.3), as
+// groups – "to buy" items split by category (spec 10.3), as
 //          [{ category: { id, name } or null for "Bez kategorii", items }],
-//          in the order of categories, "Bez kategorii" last, no empty groups;
+//          in the order of categories, "Bez kategorii" last, no empty groups.
+//          Inside a group: the order of the items array, that is the order
+//          they were added (newest last), unless the user moved them (spec 9.2);
 // bought – the most recently checked first, not grouped.
 export function getSections(list, categories) {
   const toBuy = list.items.filter((item) => !item.checked);
   const bought = list.items
     .filter((item) => item.checked)
     .sort((a, b) => b.checkedAt - a.checkedAt);
-  return { toBuy, groups: groupByCategory(toBuy, categories), bought };
+  return { groups: groupByCategory(toBuy, categories), bought };
 }
 
 function groupByCategory(items, categories) {
@@ -292,10 +302,10 @@ function groupByCategory(items, categories) {
     items: items.filter((item) => item.categoryId === category.id),
   }));
   // Also catches ids of deleted categories, which count as no category (spec 10.6).
-  const uncategorized = items.filter(
-    (item) => !categories.some((category) => category.id === item.categoryId),
-  );
-  groups.push({ category: null, items: uncategorized });
+  groups.push({
+    category: null,
+    items: items.filter((item) => shownCategoryId(item, categories) === null),
+  });
   return groups.filter((group) => group.items.length > 0);
 }
 

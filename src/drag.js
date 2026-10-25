@@ -10,16 +10,19 @@
 const EDGE_SIZE = 64; // px from the top of the screen or the bottom bar where auto-scroll starts
 const MAX_SCROLL_SPEED = 12; // px per animation frame, reached right at the edge
 
-export function enableDragging(list, onMove) {
-  list.addEventListener('pointerdown', (event) => {
+// container: an element that stays on the page and holds the lists, which are
+// rebuilt on every render. Each list (<ul>) is one group: an item can only be
+// dragged within its own list, and toIndex is the position in that list.
+export function enableDragging(container, onMove) {
+  container.addEventListener('pointerdown', (event) => {
     const handle = event.target.closest('.item-handle');
     // Only the main button (left click, finger, pen): a right click must not start a drag.
     if (!handle || event.button !== 0) return;
-    startDrag(list, handle, event, onMove);
+    startDrag(handle.closest('ul'), handle, event, onMove);
   });
 
   // A long press could open the browser's context menu in the middle of a drag.
-  list.addEventListener('contextmenu', (event) => {
+  container.addEventListener('contextmenu', (event) => {
     if (event.target.closest('.item-handle')) event.preventDefault();
   });
 }

@@ -1,7 +1,8 @@
-// Manual order of "to buy" items (spec 9.2): keyboard, mouse and finger.
+// Manual order of "to buy" items (spec 9.2) within a category group (10.3):
+// keyboard, mouse and finger. Most tests use dairy products, so they share a group.
 
 import { test, expect } from '@playwright/test';
-import { openApp, addItems, expectToBuy, boughtNames } from './helpers.js';
+import { openApp, addItems, expectToBuy, boughtNames, groupTitles } from './helpers.js';
 
 function handle(page, name) {
   return page.getByRole('button', { name: `Zmień kolejność: ${name}` });
@@ -12,7 +13,7 @@ function handle(page, name) {
 // Uses the mouse on the desktop and a real touch gesture on the phone.
 async function drag(page, isMobile, name, targetName) {
   const from = await handle(page, name).boundingBox();
-  const target = await page.locator('#to-buy-list li', { hasText: targetName }).boundingBox();
+  const target = await page.locator('#to-buy-section li', { hasText: targetName }).boundingBox();
   const startX = from.x + from.width / 2;
   const startY = from.y + from.height / 2;
   const goingDown = target.y > from.y;
@@ -46,49 +47,69 @@ async function touchDrag(page, x, startY, endY) {
 
 test.beforeEach(async ({ page }) => {
   await openApp(page);
-  await addItems(page, 'chleb', 'mleko', 'masło');
+  await addItems(page, 'mleko', 'ser', 'jogurt');
 });
 
 test('arrow keys on the handle move a product and keep focus', async ({ page }) => {
-  await handle(page, 'masło').focus();
+  await handle(page, 'jogurt').focus();
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('ArrowUp');
 
-  await expectToBuy(page, ['masło', 'chleb', 'mleko']);
-  await expect(handle(page, 'masło')).toBeFocused();
+  await expectToBuy(page, ['jogurt', 'mleko', 'ser']);
+  await expect(handle(page, 'jogurt')).toBeFocused();
 
   // Already at the top: nothing happens.
   await page.keyboard.press('ArrowUp');
-  await expectToBuy(page, ['masło', 'chleb', 'mleko']);
+  await expectToBuy(page, ['jogurt', 'mleko', 'ser']);
 });
 
 test('dragging the handle moves a product down', async ({ page, isMobile }) => {
-  await drag(page, isMobile, 'chleb', 'masło');
-  await expectToBuy(page, ['mleko', 'masło', 'chleb']);
+  await drag(page, isMobile, 'mleko', 'jogurt');
+  await expectToBuy(page, ['ser', 'jogurt', 'mleko']);
 });
 
 test('dragging the handle moves a product up', async ({ page, isMobile }) => {
-  await drag(page, isMobile, 'masło', 'chleb');
-  await expectToBuy(page, ['masło', 'chleb', 'mleko']);
+  await drag(page, isMobile, 'jogurt', 'mleko');
+  await expectToBuy(page, ['jogurt', 'mleko', 'ser']);
 });
 
 test('the new order survives a reload', async ({ page, isMobile }) => {
-  await drag(page, isMobile, 'masło', 'chleb');
+  await drag(page, isMobile, 'jogurt', 'mleko');
   await page.reload();
-  await expectToBuy(page, ['masło', 'chleb', 'mleko']);
+  await expectToBuy(page, ['jogurt', 'mleko', 'ser']);
 });
 
 test('an unchecked product returns to its place in the manual order', async ({ page, isMobile }) => {
-  await drag(page, isMobile, 'masło', 'chleb');
+  await drag(page, isMobile, 'jogurt', 'mleko');
 
-  await page.getByRole('checkbox', { name: 'chleb' }).check();
-  await expect(boughtNames(page)).toHaveText(['chleb']);
-  await page.getByRole('checkbox', { name: 'chleb' }).uncheck();
+  await page.getByRole('checkbox', { name: 'mleko' }).check();
+  await expect(boughtNames(page)).toHaveText(['mleko']);
+  await page.getByRole('checkbox', { name: 'mleko' }).uncheck();
 
-  await expectToBuy(page, ['masło', 'chleb', 'mleko']);
+  await expectToBuy(page, ['jogurt', 'mleko', 'ser']);
 });
 
 test('bought products have no handle', async ({ page }) => {
   await page.getByRole('checkbox', { name: 'mleko' }).check();
   await expect(handle(page, 'mleko')).toHaveCount(0);
+});
+
+test('a product cannot be dragged out of its group', async ({ page, isMobile }) => {
+  await addItems(page, 'chleb'); // Pieczywo, shown above Nabiał
+  await expect(groupTitles(page)).toHaveText(['Pieczywo', 'Nabiał']);
+
+  await drag(page, isMobile, 'jogurt', 'chleb');
+
+  // Stopped at the top of its own group.
+  await expect(groupTitles(page)).toHaveText(['Pieczywo', 'Nabiał']);
+  await expectToBuy(page, ['chleb', 'jogurt', 'mleko', 'ser']);
+});
+
+test('arrow keys stop at the edge of the group', async ({ page }) => {
+  await addItems(page, 'chleb');
+
+  await handle(page, 'mleko').focus();
+  await page.keyboard.press('ArrowUp');
+
+  await expectToBuy(page, ['chleb', 'mleko', 'ser', 'jogurt']);
 });

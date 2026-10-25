@@ -20,10 +20,14 @@ export async function addItems(page, ...names) {
   }
 }
 
-// Names of the "to buy" items in the order shown on screen. The quantity label
-// is part of the name button, so "mleko 2 l" reads as "mleko 2 l".
+// Names of the "to buy" items in the order shown on screen, group after group.
+// The quantity label is part of the name button, so "mleko 2 l" reads as "mleko 2 l".
 export function toBuyNames(page) {
-  return page.locator('#to-buy-list .item-name');
+  return page.locator('#to-buy-section .item-name');
+}
+
+export function groupTitles(page) {
+  return page.locator('#to-buy-section .group-title');
 }
 
 export function boughtNames(page) {

@@ -163,6 +163,19 @@ h2 {
   color: var(--color-muted);
 }
 
+/* Category heading inside "Do kupienia" (spec 10.3): smaller than the section
+   heading, in the accent color so the groups are easy to tell apart. */
+.group-title {
+  margin: 1rem 0 0.375rem 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.group-title:first-child {
+  margin-top: 0.25rem;
+}
+
 ul {
   margin: 0;
   padding: 0;
@@ -244,13 +257,13 @@ li + li {
 }
 
 /* Items stepping aside while another one is dragged past them. */
-#to-buy-list li {
+#to-buy-groups li {
   transition: transform 150ms ease;
 }
 
 /* The dragged item follows the finger directly, so no transition here. Its own
    background covers the items it passes over. */
-#to-buy-list li.dragging {
+#to-buy-groups li.dragging {
   position: relative;
   z-index: 1;
   background: var(--color-surface);
@@ -269,7 +282,7 @@ body.is-dragging .item-handle {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #to-buy-list li {
+  #to-buy-groups li {
     transition: none;
   }
 }

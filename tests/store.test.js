@@ -291,69 +291,107 @@ describe('clearChecked', () => {
   });
 });
 
+// "To buy" names in the order shown on screen: group after group.
+function toBuyNames(state) {
+  return sections(state).groups.flatMap((group) => names(group.items));
+}
+
+// In these tests most products are dairy (Nabiał), so they share one group.
 describe('moveItem', () => {
-  // Returns the "to buy" names in the order shown on screen.
-  function toBuyNames(state) {
-    return names(sections(state).toBuy);
-  }
-
-  it('moves an item up', () => {
-    const state = moveItem(stateWith('chleb', 'mleko', 'masło'), 'i_3', 0);
-    expect(toBuyNames(state)).toEqual(['masło', 'chleb', 'mleko']);
+  it('moves an item up within its group', () => {
+    const state = moveItem(stateWith('mleko', 'ser', 'jogurt'), 'i_3', 0);
+    expect(toBuyNames(state)).toEqual(['jogurt', 'mleko', 'ser']);
   });
 
-  it('moves an item down', () => {
-    const state = moveItem(stateWith('chleb', 'mleko', 'masło'), 'i_1', 1);
-    expect(toBuyNames(state)).toEqual(['mleko', 'chleb', 'masło']);
+  it('moves an item down within its group', () => {
+    const state = moveItem(stateWith('mleko', 'ser', 'jogurt'), 'i_1', 1);
+    expect(toBuyNames(state)).toEqual(['ser', 'mleko', 'jogurt']);
   });
 
-  it('treats an index past either end as the top or the bottom', () => {
-    const start = stateWith('chleb', 'mleko', 'masło');
-    expect(toBuyNames(moveItem(start, 'i_2', -5))).toEqual(['mleko', 'chleb', 'masło']);
-    expect(toBuyNames(moveItem(start, 'i_2', 99))).toEqual(['chleb', 'masło', 'mleko']);
+  it('treats an index past either end as the top or the bottom of the group', () => {
+    const start = stateWith('mleko', 'ser', 'jogurt');
+    expect(toBuyNames(moveItem(start, 'i_2', -5))).toEqual(['ser', 'mleko', 'jogurt']);
+    expect(toBuyNames(moveItem(start, 'i_2', 99))).toEqual(['mleko', 'jogurt', 'ser']);
+  });
+
+  it('counts the position within the group, skipping other groups', () => {
+    // Array: mleko, chleb, ser, bułki, jogurt → groups: Pieczywo [chleb, bułki], Nabiał [mleko, ser, jogurt]
+    const start = stateWith('mleko', 'chleb', 'ser', 'bułki', 'jogurt');
+    const state = moveItem(start, 'i_5', 0);
+    expect(groupNames(state)).toEqual([
+      ['Pieczywo', 'chleb', 'bułki'],
+      ['Nabiał', 'jogurt', 'mleko', 'ser'],
+    ]);
+  });
+
+  it('never moves an item into another group', () => {
+    const state = moveItem(stateWith('chleb', 'mleko'), 'i_2', -5);
+    expect(groupNames(state)).toEqual([
+      ['Pieczywo', 'chleb'],
+      ['Nabiał', 'mleko'],
+    ]);
+  });
+
+  it('moves items without a category within "Bez kategorii"', () => {
+    const state = moveItem(stateWith('baterie', 'mleko', 'klej'), 'i_3', 0);
+    expect(groupNames(state)).toEqual([
+      ['Nabiał', 'mleko'],
+      [null, 'klej', 'baterie'],
+    ]);
+  });
+
+  it('treats items of a deleted category as "Bez kategorii"', () => {
+    const start = stateWith('mleko', 'baterie');
+    const withoutDairy = {
+      ...start,
+      categories: start.categories.filter((category) => category.id !== 'c_dairy'),
+    };
+    expect(groupNames(moveItem(withoutDairy, 'i_2', 0))).toEqual([[null, 'baterie', 'mleko']]);
   });
 
   it('returns the same state when the position does not change', () => {
-    const before = stateWith('chleb', 'mleko');
+    const before = stateWith('mleko', 'ser');
     expect(moveItem(before, 'i_1', 0)).toBe(before);
+    // The only item of its group can't move anywhere.
+    expect(moveItem(stateWith('chleb', 'mleko'), 'i_1', 1)).toEqual(stateWith('chleb', 'mleko'));
   });
 
   it('returns the same state for a bought or unknown item', () => {
-    const before = toggleItem(stateWith('chleb', 'mleko'), 'i_1', 9000);
+    const before = toggleItem(stateWith('mleko', 'ser'), 'i_1', 9000);
     expect(moveItem(before, 'i_1', 1)).toBe(before);
     expect(moveItem(before, 'i_404', 0)).toBe(before);
   });
 
-  it('counts the position among "to buy" items only, skipping bought ones', () => {
-    let state = stateWith('chleb', 'mleko', 'masło', 'ser');
-    state = toggleItem(state, 'i_2', 9000); // "to buy": chleb, masło, ser
+  it('skips bought items when counting positions', () => {
+    let state = stateWith('mleko', 'ser', 'jogurt', 'kefir');
+    state = toggleItem(state, 'i_2', 9000); // group: mleko, jogurt, kefir
     state = moveItem(state, 'i_4', 1);
-    expect(toBuyNames(state)).toEqual(['chleb', 'ser', 'masło']);
+    expect(toBuyNames(state)).toEqual(['mleko', 'kefir', 'jogurt']);
   });
 
-  it('keeps bought items in their array slots', () => {
-    let state = stateWith('chleb', 'mleko', 'masło');
-    state = toggleItem(state, 'i_2', 9000);
-    state = moveItem(state, 'i_3', 0);
-    expect(names(items(state))).toEqual(['masło', 'mleko', 'chleb']);
+  it('keeps bought items and other groups in their array slots', () => {
+    let state = stateWith('mleko', 'chleb', 'ser', 'jogurt');
+    state = toggleItem(state, 'i_3', 9000);
+    state = moveItem(state, 'i_4', 0);
+    expect(names(items(state))).toEqual(['jogurt', 'chleb', 'ser', 'mleko']);
   });
 
   it('returns an unchecked item to its place in the manual order', () => {
-    let state = stateWith('chleb', 'mleko', 'masło');
-    state = moveItem(state, 'i_3', 0); // masło, chleb, mleko
-    state = toggleItem(state, 'i_1', 9000);
-    state = toggleItem(state, 'i_1', 9100);
-    expect(toBuyNames(state)).toEqual(['masło', 'chleb', 'mleko']);
+    let state = stateWith('mleko', 'ser', 'jogurt');
+    state = moveItem(state, 'i_3', 0); // jogurt, mleko, ser
+    state = toggleItem(state, 'i_2', 9000);
+    state = toggleItem(state, 'i_2', 9100);
+    expect(toBuyNames(state)).toEqual(['jogurt', 'mleko', 'ser']);
   });
 
-  it('adds new items at the bottom after a move', () => {
-    let state = moveItem(stateWith('chleb', 'mleko'), 'i_2', 0);
-    state = addItem(state, 'ser', { id: 'i_9', now: 9000 }).state;
-    expect(toBuyNames(state)).toEqual(['mleko', 'chleb', 'ser']);
+  it('adds new items at the bottom of their group after a move', () => {
+    let state = moveItem(stateWith('mleko', 'ser'), 'i_2', 0);
+    state = addItem(state, 'kefir', { id: 'i_9', now: 9000 }).state;
+    expect(toBuyNames(state)).toEqual(['ser', 'mleko', 'kefir']);
   });
 
   it('does not mutate the previous state', () => {
-    const before = stateWith('chleb', 'mleko');
+    const before = stateWith('mleko', 'ser');
     const snapshot = structuredClone(before);
     moveItem(before, 'i_2', 0);
     expect(before).toEqual(snapshot);
@@ -361,15 +399,13 @@ describe('moveItem', () => {
 });
 
 describe('getSections', () => {
-  it('orders "to buy" by creation, oldest first', () => {
-    const { toBuy } = sections(stateWith('chleb', 'mleko', 'masło'));
-    expect(names(toBuy)).toEqual(['chleb', 'mleko', 'masło']);
+  it('orders a group by creation, oldest first', () => {
+    expect(toBuyNames(stateWith('mleko', 'ser', 'jogurt'))).toEqual(['mleko', 'ser', 'jogurt']);
   });
 
-  it('orders "to buy" by the items array, not by creation time', () => {
-    const state = moveItem(stateWith('chleb', 'mleko', 'masło'), 'i_3', 0);
-    const { toBuy } = sections(state);
-    expect(names(toBuy)).toEqual(['masło', 'chleb', 'mleko']);
+  it('orders a group by the items array, not by creation time', () => {
+    const state = moveItem(stateWith('mleko', 'ser', 'jogurt'), 'i_3', 0);
+    expect(toBuyNames(state)).toEqual(['jogurt', 'mleko', 'ser']);
   });
 
   it('keeps version 1 data in the order it was added', () => {
@@ -382,7 +418,8 @@ describe('getSections', () => {
         { id: 'i_2', name: 'mleko', checked: false, createdAt: 2000, checkedAt: null, categoryId: null },
       ],
     };
-    expect(names(getSections(list, DEFAULT_CATEGORIES).toBuy)).toEqual(['chleb', 'mleko']);
+    const { groups } = getSections(list, DEFAULT_CATEGORIES);
+    expect(names(groups[0].items)).toEqual(['chleb', 'mleko']);
   });
 
   it('orders "bought" by check time, most recent first', () => {
@@ -390,18 +427,15 @@ describe('getSections', () => {
     state = toggleItem(state, 'i_1', 9000);
     state = toggleItem(state, 'i_3', 9100);
 
-    const { toBuy, bought } = sections(state);
-    expect(names(toBuy)).toEqual(['mleko']);
-    expect(names(bought)).toEqual(['masło', 'chleb']);
+    expect(toBuyNames(state)).toEqual(['mleko']);
+    expect(names(sections(state).bought)).toEqual(['masło', 'chleb']);
   });
 
   it('returns an unchecked item to its original position', () => {
-    let state = stateWith('chleb', 'mleko', 'masło');
+    let state = stateWith('mleko', 'ser', 'jogurt');
     state = toggleItem(state, 'i_1', 9000);
     state = toggleItem(state, 'i_1', 9100);
-
-    const { toBuy } = sections(state);
-    expect(names(toBuy)).toEqual(['chleb', 'mleko', 'masło']);
+    expect(toBuyNames(state)).toEqual(['mleko', 'ser', 'jogurt']);
   });
 
   it('does not reorder the stored items', () => {

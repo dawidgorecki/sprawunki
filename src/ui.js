@@ -19,7 +19,7 @@ export function createUI(handlers) {
     messageButton: document.getElementById('message-button'),
     emptyState: document.getElementById('empty-state'),
     toBuySection: document.getElementById('to-buy-section'),
-    toBuyList: document.getElementById('to-buy-list'),
+    toBuyGroups: document.getElementById('to-buy-groups'),
     boughtSection: document.getElementById('bought-section'),
     boughtList: document.getElementById('bought-list'),
     clearChecked: document.getElementById('clear-checked'),
@@ -67,8 +67,9 @@ export function createUI(handlers) {
 
     event.preventDefault(); // otherwise the arrow keys also scroll the page
     const li = event.target.closest('li');
-    // The position on screen is the position within "to buy", which moveItem expects.
-    const index = [...elements.toBuyList.children].indexOf(li);
+    // Each group is its own <ul>, so the position among the siblings is the
+    // position within the group, which moveItem expects.
+    const index = [...li.parentElement.children].indexOf(li);
     const toIndex = event.key === 'ArrowUp' ? index - 1 : index + 1;
 
     handlers.onMove(li.dataset.id, toIndex);
@@ -76,7 +77,7 @@ export function createUI(handlers) {
     findItemElement(li.dataset.id)?.querySelector('.item-handle').focus();
   });
 
-  enableDragging(elements.toBuyList, handlers.onMove);
+  enableDragging(elements.toBuyGroups, handlers.onMove);
 
   elements.wakeLock.addEventListener('click', () => handlers.onToggleWakeLock());
 
@@ -207,19 +208,39 @@ function startEditing(nameButton, itemId, onRename) {
 
 function render(elements, state) {
   const list = getActiveList(state);
-  const { toBuy, bought } = getSections(list, state.categories);
+  const { groups, bought } = getSections(list, state.categories);
   const { checked, total } = getProgress(list);
 
   elements.emptyState.hidden = total > 0;
   elements.progress.hidden = total === 0;
   elements.progress.textContent = `${checked} z ${total} kupione`;
 
-  elements.toBuySection.hidden = toBuy.length === 0;
-  elements.toBuyList.replaceChildren(...toBuy.map(createItemElement));
+  elements.toBuySection.hidden = groups.length === 0;
+  elements.toBuyGroups.replaceChildren(...createGroupElements(groups));
 
   // "Wyczyść kupione" is inside this section, so it is visible only when there are bought items.
   elements.boughtSection.hidden = bought.length === 0;
   elements.boughtList.replaceChildren(...bought.map(createItemElement));
+}
+
+// Builds a heading and a list for every group:
+//   <h3>Nabiał</h3> <ul> items… </ul>
+// When everything is in "Bez kategorii", the heading is left out and the list
+// looks like before categories existed (spec 10.3).
+function createGroupElements(groups) {
+  const onlyUncategorized = groups.length === 1 && groups[0].category === null;
+
+  return groups.flatMap((group) => {
+    const list = document.createElement('ul');
+    list.append(...group.items.map(createItemElement));
+    if (onlyUncategorized) return [list];
+
+    const heading = document.createElement('h3');
+    heading.className = 'group-title';
+    // A category name is typed by the user (spec 10.5), so textContent too.
+    heading.textContent = group.category?.name ?? 'Bez kategorii';
+    return [heading, list];
+  });
 }
 
 // Builds: <li data-id> [handle] [checkbox] [name button: name + quantity label] [remove button] </li>

@@ -1,7 +1,15 @@
 // Basic list features from version 1 (spec 3.1–3.8) and the quantity label (9.1).
 
 import { test, expect } from '@playwright/test';
-import { openApp, nameInput, addItems, toBuyNames, boughtNames, expectToBuy } from './helpers.js';
+import {
+  openApp,
+  nameInput,
+  addItems,
+  toBuyNames,
+  boughtNames,
+  expectToBuy,
+  groupTitles,
+} from './helpers.js';
 
 test.beforeEach(async ({ page }) => {
   await openApp(page);
@@ -51,10 +59,11 @@ test('a duplicate is not added and the existing product is highlighted', async (
 
   await addItems(page, 'Mleko 3 l');
 
-  // Back in "to buy" at its own place (added first), with the new quantity, still only one milk.
-  await expectToBuy(page, ['Mleko 3 l', 'chleb']);
+  // Back in "to buy" with the new quantity, still only one milk
+  // (Nabiał comes after Pieczywo, so it is listed second).
+  await expectToBuy(page, ['chleb', 'Mleko 3 l']);
   await expect(boughtNames(page)).toHaveCount(0);
-  await expect(page.locator('#to-buy-list li.highlight')).toHaveCount(1);
+  await expect(page.locator('#to-buy-section li.highlight')).toHaveCount(1);
 });
 
 test('shows the quantity as a separate label', async ({ page }) => {
@@ -140,7 +149,9 @@ test('loads a list saved by version 1.1 after the update', async ({ page }) => {
   await page.evaluate((data) => localStorage.setItem('sprawunki', JSON.stringify(data)), v1);
   await page.reload();
 
-  await expectToBuy(page, ['masło', 'chleb']);
+  // The migration gave the old items categories from the dictionary.
+  await expect(groupTitles(page)).toHaveText(['Pieczywo', 'Nabiał']);
+  await expectToBuy(page, ['chleb', 'masło']);
   await expect(boughtNames(page)).toHaveText(['mleko']);
   await expect(page.getByRole('status')).toBeEmpty();
 });
@@ -151,4 +162,27 @@ test('starts with an empty list and a message when saved data is corrupted', asy
 
   await expect(page.getByText('Nie udało się odczytać zapisanej listy.', { exact: false })).toBeVisible();
   await expect(page.getByText('Lista jest pusta.')).toBeVisible();
+});
+
+test('groups "to buy" by category, in the order of categories', async ({ page }) => {
+  await addItems(page, 'baterie', 'mleko', 'chleb', 'ser');
+
+  await expect(groupTitles(page)).toHaveText(['Pieczywo', 'Nabiał', 'Bez kategorii']);
+  await expectToBuy(page, ['chleb', 'mleko', 'ser', 'baterie']);
+});
+
+test('shows no headings when nothing has a category', async ({ page }) => {
+  await addItems(page, 'baterie', 'klej');
+
+  await expect(groupTitles(page)).toHaveCount(0);
+  await expectToBuy(page, ['baterie', 'klej']);
+});
+
+test('bought products are not grouped', async ({ page }) => {
+  await addItems(page, 'chleb', 'mleko');
+  await page.getByRole('checkbox', { name: 'chleb' }).check();
+  await page.getByRole('checkbox', { name: 'mleko' }).check();
+
+  await expect(groupTitles(page)).toHaveCount(0);
+  await expect(boughtNames(page)).toHaveText(['mleko', 'chleb']);
 });
