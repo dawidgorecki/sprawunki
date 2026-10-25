@@ -7,6 +7,12 @@ import {
   DEFAULT_CATEGORIES,
   findCategoryId,
   setItemCategory,
+  MAX_CATEGORY_NAME_LENGTH,
+  addCategory,
+  renameCategory,
+  isCategoryUsed,
+  removeCategory,
+  moveCategory,
   getActiveList,
   addItem,
   toggleItem,
@@ -665,5 +671,171 @@ describe('getSections groups', () => {
 
   it('returns no groups for an empty list', () => {
     expect(sections(stateWith()).groups).toEqual([]);
+  });
+});
+
+function categoryNames(state) {
+  return state.categories.map((category) => category.name);
+}
+
+describe('addCategory', () => {
+  it('adds a category at the end', () => {
+    const result = addCategory(stateWith(), '  Apteka ', 'c_new');
+
+    expect(result.status).toBe('added');
+    expect(result.categoryId).toBe('c_new');
+    expect(result.state.categories.at(-1)).toEqual({ id: 'c_new', name: 'Apteka' });
+    expect(result.state.categories).toHaveLength(DEFAULT_CATEGORIES.length + 1);
+  });
+
+  it('rejects an empty or too long name', () => {
+    const before = stateWith();
+    expect(addCategory(before, '   ', 'c_new')).toEqual({ state: before, status: 'empty', categoryId: null });
+    const tooLong = 'a'.repeat(MAX_CATEGORY_NAME_LENGTH + 1);
+    expect(addCategory(before, tooLong, 'c_new').status).toBe('too-long');
+    expect(addCategory(before, 'a'.repeat(MAX_CATEGORY_NAME_LENGTH), 'c_new').status).toBe('added');
+  });
+
+  it('rejects a duplicate, ignoring case and spaces', () => {
+    const before = stateWith();
+    const result = addCategory(before, '  NAPOJE ', 'c_new');
+    expect(result.status).toBe('duplicate');
+    expect(result.state).toBe(before);
+  });
+
+  it('does not read a quantity from a category name', () => {
+    // "Napoje 2" would be "Napoje" for products, but categories compare whole names.
+    expect(addCategory(stateWith(), 'Napoje 2 l', 'c_new').status).toBe('added');
+  });
+});
+
+describe('renameCategory', () => {
+  it('renames a category', () => {
+    const { state, status } = renameCategory(stateWith(), 'c_drinks', ' Napoje i soki ');
+    expect(status).toBe('renamed');
+    expect(state.categories.find((c) => c.id === 'c_drinks').name).toBe('Napoje i soki');
+  });
+
+  it('allows changing only the letter case', () => {
+    expect(renameCategory(stateWith(), 'c_drinks', 'NAPOJE').status).toBe('renamed');
+  });
+
+  it('rejects an empty name, a duplicate or an unknown id and keeps the state', () => {
+    const before = stateWith();
+    for (const [id, name, status] of [
+      ['c_drinks', '  ', 'empty'],
+      ['c_drinks', 'a'.repeat(MAX_CATEGORY_NAME_LENGTH + 1), 'too-long'],
+      ['c_drinks', 'nabiał', 'duplicate'],
+      ['c_404', 'Apteka', 'not-found'],
+    ]) {
+      const result = renameCategory(before, id, name);
+      expect(result.status).toBe(status);
+      expect(result.state).toBe(before);
+    }
+  });
+
+  it('keeps the products and memory of the category', () => {
+    let state = setItemCategory(stateWith('baterie'), 'i_1', 'c_household');
+    state = renameCategory(state, 'c_household', 'Dom').state;
+    expect(groupNames(state)).toEqual([['Dom', 'baterie']]);
+    expect(state.categoryMemory).toEqual({ baterie: 'c_household' });
+  });
+});
+
+describe('isCategoryUsed', () => {
+  it('is true when an item belongs to the category, bought ones included', () => {
+    const state = toggleItem(stateWith('mleko'), 'i_1', 9000);
+    expect(isCategoryUsed(state, 'c_dairy')).toBe(true);
+    expect(isCategoryUsed(state, 'c_drinks')).toBe(false);
+  });
+
+  it('looks at every list, not only the active one', () => {
+    const other = { id: 'l_2', name: 'Inna', items: [{ ...items(stateWith('woda'))[0] }] };
+    const state = { ...stateWith(), lists: [...stateWith().lists, other] };
+    expect(isCategoryUsed(state, 'c_drinks')).toBe(true);
+  });
+});
+
+describe('removeCategory', () => {
+  it('removes the category and moves its items to "Bez kategorii"', () => {
+    const state = removeCategory(stateWith('mleko', 'chleb'), 'c_dairy');
+
+    expect(categoryNames(state)).not.toContain('Nabiał');
+    expect(items(state).map((item) => item.categoryId)).toEqual([null, 'c_bakery']);
+    expect(groupNames(state)).toEqual([
+      ['Pieczywo', 'chleb'],
+      [null, 'mleko'],
+    ]);
+  });
+
+  it('updates bought items and items on other lists too', () => {
+    const base = toggleItem(stateWith('mleko'), 'i_1', 9000);
+    const other = { id: 'l_2', name: 'Inna', items: [{ ...items(stateWith('ser'))[0] }] };
+    const state = removeCategory({ ...base, lists: [...base.lists, other] }, 'c_dairy');
+
+    expect(state.lists.flatMap((list) => list.items).map((item) => item.categoryId)).toEqual([
+      null,
+      null,
+    ]);
+  });
+
+  it('forgets memory entries pointing to the category, keeps the others', () => {
+    let state = stateWith('mleko owsiane', 'chleb', 'kawa');
+    state = setItemCategory(state, 'i_1', 'c_drinks');
+    state = setItemCategory(state, 'i_2', null); // a remembered "Bez kategorii" stays
+    state = setItemCategory(state, 'i_3', 'c_drinks');
+
+    state = removeCategory(state, 'c_drinks');
+    expect(state.categoryMemory).toEqual({ chleb: null });
+  });
+
+  it('lets the dictionary pick a category again for a forgotten product', () => {
+    let state = setItemCategory(stateWith('mleko'), 'i_1', 'c_drinks');
+    state = removeCategory(state, 'c_drinks');
+    state = removeItem(state, 'i_1');
+    state = addItem(state, 'mleko', { id: 'i_9', now: 9000 }).state;
+    expect(items(state)[0].categoryId).toBe('c_dairy');
+  });
+
+  it('returns the same state for an unknown id', () => {
+    const before = stateWith('mleko');
+    expect(removeCategory(before, 'c_404')).toBe(before);
+  });
+
+  it('does not mutate the previous state', () => {
+    const before = setItemCategory(stateWith('mleko'), 'i_1', 'c_drinks');
+    const snapshot = structuredClone(before);
+    removeCategory(before, 'c_drinks');
+    expect(before).toEqual(snapshot);
+  });
+});
+
+describe('moveCategory', () => {
+  it('moves a category and changes the order of groups', () => {
+    const state = moveCategory(stateWith('chleb', 'mleko'), 'c_dairy', 0);
+    expect(categoryNames(state).slice(0, 3)).toEqual(['Nabiał', 'Warzywa i owoce', 'Pieczywo']);
+    expect(groupNames(state)).toEqual([
+      ['Nabiał', 'mleko'],
+      ['Pieczywo', 'chleb'],
+    ]);
+  });
+
+  it('treats an index past either end as the first or the last place', () => {
+    const start = stateWith();
+    expect(moveCategory(start, 'c_dairy', -5).categories[0].id).toBe('c_dairy');
+    expect(moveCategory(start, 'c_dairy', 99).categories.at(-1).id).toBe('c_dairy');
+  });
+
+  it('returns the same state for an unknown id or the same position', () => {
+    const before = stateWith();
+    expect(moveCategory(before, 'c_404', 0)).toBe(before);
+    expect(moveCategory(before, 'c_produce', 0)).toBe(before);
+  });
+
+  it('does not mutate the previous state', () => {
+    const before = stateWith();
+    const snapshot = structuredClone(before);
+    moveCategory(before, 'c_household', 0);
+    expect(before).toEqual(snapshot);
   });
 });

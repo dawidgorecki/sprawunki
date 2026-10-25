@@ -10,6 +10,7 @@ import { PRODUCT_DICTIONARY } from './product-dictionary.js';
 // Version 2 added categories (spec 10.6). Older data is upgraded by migrate() in storage.js.
 export const DATA_VERSION = 2;
 export const MAX_NAME_LENGTH = 100;
+export const MAX_CATEGORY_NAME_LENGTH = 40;
 
 export function createInitialState(listId) {
   return {
@@ -127,9 +128,9 @@ export function findCategoryId(fullName, categories, memory) {
 }
 
 // Returns null for a valid name, otherwise the reason it is invalid.
-function validateName(name) {
+function validateName(name, maxLength = MAX_NAME_LENGTH) {
   if (name === '') return 'empty';
-  if (name.length > MAX_NAME_LENGTH) return 'too-long';
+  if (name.length > maxLength) return 'too-long';
   return null;
 }
 
@@ -312,4 +313,95 @@ function groupByCategory(items, categories) {
 export function getProgress(list) {
   const checked = list.items.filter((item) => item.checked).length;
   return { checked, total: list.items.length };
+}
+
+// ---------- Managing categories (spec 10.5) ----------
+// Categories are shared by the whole app, not by one list, so these functions
+// change state.categories and, where needed, items in every list.
+
+// Category names are compared like product names, but without reading a
+// quantity: "Napoje 2" is a different category from "Napoje".
+function findCategoryByName(categories, name, ignoredId = null) {
+  const normalized = normalizeName(name);
+  return categories.find(
+    (category) => category.id !== ignoredId && normalizeName(category.name) === normalized,
+  );
+}
+
+// Returns { state, status, categoryId }. A new category goes to the end.
+// status: 'added' | 'empty' | 'too-long' | 'duplicate'
+export function addCategory(state, rawName, id) {
+  const name = rawName.trim();
+  const error = validateName(name, MAX_CATEGORY_NAME_LENGTH);
+  if (error) return { state, status: error, categoryId: null };
+  if (findCategoryByName(state.categories, name)) {
+    return { state, status: 'duplicate', categoryId: null };
+  }
+
+  const newState = { ...state, categories: [...state.categories, { id, name }] };
+  return { state: newState, status: 'added', categoryId: id };
+}
+
+// Returns { state, status }. On any error the state is unchanged, so the UI
+// can simply restore the previous name, as with products.
+// status: 'renamed' | 'empty' | 'too-long' | 'duplicate' | 'not-found'
+export function renameCategory(state, categoryId, rawName) {
+  if (!state.categories.some((category) => category.id === categoryId)) {
+    return { state, status: 'not-found' };
+  }
+  const name = rawName.trim();
+  const error = validateName(name, MAX_CATEGORY_NAME_LENGTH);
+  if (error) return { state, status: error };
+  // The category itself is ignored, so "napoje" → "Napoje" is allowed.
+  if (findCategoryByName(state.categories, name, categoryId)) {
+    return { state, status: 'duplicate' };
+  }
+
+  const categories = state.categories.map((category) =>
+    category.id === categoryId ? { ...category, name } : category,
+  );
+  return { state: { ...state, categories }, status: 'renamed' };
+}
+
+// True when any item, on any list, bought or not, belongs to the category.
+// The UI asks for confirmation before removing such a category (spec 10.5).
+export function isCategoryUsed(state, categoryId) {
+  return state.lists.some((list) => list.items.some((item) => item.categoryId === categoryId));
+}
+
+// Removes a category. Its items on every list go to "Bez kategorii" (null), and
+// memory entries pointing to it are forgotten (spec 10.4), so those products
+// fall back to the dictionary next time. Returns the same state for an unknown id.
+export function removeCategory(state, categoryId) {
+  if (!state.categories.some((category) => category.id === categoryId)) return state;
+
+  const categoryMemory = Object.fromEntries(
+    Object.entries(state.categoryMemory).filter(([, id]) => id !== categoryId),
+  );
+  return {
+    ...state,
+    categories: state.categories.filter((category) => category.id !== categoryId),
+    categoryMemory,
+    lists: state.lists.map((list) => ({
+      ...list,
+      items: list.items.map((item) =>
+        item.categoryId === categoryId ? { ...item, categoryId: null } : item,
+      ),
+    })),
+  };
+}
+
+// Moves a category to position toIndex (0 = first), like moveItem for products.
+// Returns the same state when nothing moves (unknown id, same position).
+export function moveCategory(state, categoryId, toIndex) {
+  const fromIndex = state.categories.findIndex((category) => category.id === categoryId);
+  if (fromIndex === -1) return state;
+
+  const targetIndex = Math.max(0, Math.min(toIndex, state.categories.length - 1));
+  if (targetIndex === fromIndex) return state;
+
+  const categories = [...state.categories];
+  const [moved] = categories.splice(fromIndex, 1);
+  categories.splice(targetIndex, 0, moved);
+  return { ...state, categories };
 }
