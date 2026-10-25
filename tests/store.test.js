@@ -4,6 +4,8 @@ import {
   createInitialState,
   normalizeName,
   parseQuantity,
+  DEFAULT_CATEGORIES,
+  findCategoryId,
   getActiveList,
   addItem,
   toggleItem,
@@ -14,6 +16,7 @@ import {
   getSections,
   getProgress,
 } from '../src/store.js';
+import { PRODUCT_DICTIONARY } from '../src/product-dictionary.js';
 
 // Builds a state with the given product names, added one second apart.
 function stateWith(...names) {
@@ -395,5 +398,91 @@ describe('getProgress', () => {
 
   it('works for an empty list', () => {
     expect(getProgress(getActiveList(stateWith()))).toEqual({ checked: 0, total: 0 });
+  });
+});
+
+describe('DEFAULT_CATEGORIES', () => {
+  it('has unique ids and names', () => {
+    const ids = DEFAULT_CATEGORIES.map((category) => category.id);
+    const names = DEFAULT_CATEGORIES.map((category) => normalizeName(category.name));
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(new Set(names).size).toBe(names.length);
+  });
+});
+
+// The dictionary is data written by hand, so these tests guard its rules
+// (see the comment at the top of src/product-dictionary.js).
+describe('PRODUCT_DICTIONARY', () => {
+  const entries = Object.entries(PRODUCT_DICTIONARY).flatMap(([categoryId, names]) =>
+    names.map((name) => ({ categoryId, name })),
+  );
+
+  it('refers only to default categories', () => {
+    const ids = DEFAULT_CATEGORIES.map((category) => category.id);
+    expect(ids).toEqual(expect.arrayContaining(Object.keys(PRODUCT_DICTIONARY)));
+  });
+
+  it('lists every name only once', () => {
+    const seen = new Map();
+    const repeated = entries.filter(({ name }) => {
+      const isRepeated = seen.has(name);
+      seen.set(name, true);
+      return isRepeated;
+    });
+    expect(repeated).toEqual([]);
+  });
+
+  it('writes names the way they are compared', () => {
+    // Normalized and without a quantity, otherwise the entry could never match.
+    const wrong = entries.filter(
+      ({ name }) => normalizeName(name) !== name || parseQuantity(name).quantity !== null,
+    );
+    expect(wrong).toEqual([]);
+  });
+});
+
+describe('findCategoryId', () => {
+  const categories = DEFAULT_CATEGORIES;
+
+  it('finds a product in the dictionary, ignoring case and quantity', () => {
+    expect(findCategoryId('Mleko 2 l', categories, {})).toBe('c_dairy');
+    expect(findCategoryId('6 jajek', categories, {})).toBe('c_dairy');
+    expect(findCategoryId('chleb x2', categories, {})).toBe('c_bakery');
+  });
+
+  it('falls back to the first word', () => {
+    expect(findCategoryId('mleko owsiane', categories, {})).toBe('c_dairy');
+    expect(findCategoryId('papier toaletowy 8 szt', categories, {})).toBe('c_household');
+  });
+
+  it('returns null for an unknown product', () => {
+    expect(findCategoryId('baterie AA', categories, {})).toBeNull();
+  });
+
+  it('prefers what the user chose before over the dictionary', () => {
+    const memory = { 'mleko owsiane': 'c_drinks' };
+    expect(findCategoryId('Mleko owsiane 1 l', categories, memory)).toBe('c_drinks');
+    // Only that exact name: plain milk still comes from the dictionary.
+    expect(findCategoryId('mleko', categories, memory)).toBe('c_dairy');
+  });
+
+  it('respects a remembered "Bez kategorii"', () => {
+    expect(findCategoryId('mleko', categories, { mleko: null })).toBeNull();
+  });
+
+  it('remembers products missing from the dictionary', () => {
+    expect(findCategoryId('Baterie', categories, { baterie: 'c_household' })).toBe('c_household');
+  });
+
+  it('skips categories the user deleted', () => {
+    const withoutDairy = categories.filter((category) => category.id !== 'c_dairy');
+    expect(findCategoryId('mleko', withoutDairy, {})).toBeNull();
+    // A remembered deleted category falls back to the dictionary.
+    expect(findCategoryId('ser', categories, { ser: 'c_404' })).toBe('c_dairy');
+  });
+
+  it('works for names that are also built-in object properties', () => {
+    expect(findCategoryId('constructor', categories, {})).toBeNull();
+    expect(findCategoryId('toString', categories, {})).toBeNull();
   });
 });

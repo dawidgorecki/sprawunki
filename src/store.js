@@ -5,6 +5,8 @@
 // (crypto.randomUUID(), Date.now()), so every function gives the same result
 // for the same input and is easy to test.
 
+import { PRODUCT_DICTIONARY } from './product-dictionary.js';
+
 export const DATA_VERSION = 1;
 export const MAX_NAME_LENGTH = 100;
 
@@ -66,6 +68,57 @@ function duplicateKey(name) {
 function findDuplicate(items, name, ignoredItemId = null) {
   const key = duplicateKey(name);
   return items.find((item) => item.id !== ignoredItemId && duplicateKey(item.name) === key);
+}
+
+// Store departments a new user starts with (spec 10.1), in the order of a walk
+// through a typical shop. The ids are fixed, not random, because the product
+// dictionary refers to them.
+export const DEFAULT_CATEGORIES = [
+  { id: 'c_produce', name: 'Warzywa i owoce' },
+  { id: 'c_bakery', name: 'Pieczywo' },
+  { id: 'c_dairy', name: 'Nabiał' },
+  { id: 'c_meat', name: 'Mięso i ryby' },
+  { id: 'c_deli', name: 'Wędliny' },
+  { id: 'c_frozen', name: 'Mrożonki' },
+  { id: 'c_pantry', name: 'Spiżarnia' },
+  { id: 'c_snacks', name: 'Słodycze i przekąski' },
+  { id: 'c_drinks', name: 'Napoje' },
+  { id: 'c_household', name: 'Chemia i kosmetyki' },
+];
+
+// The dictionary is grouped by category for easy editing; for lookups it is
+// turned once into a Map: product name → category id.
+const DICTIONARY_INDEX = new Map(
+  Object.entries(PRODUCT_DICTIONARY).flatMap(([categoryId, names]) =>
+    names.map((name) => [name, categoryId]),
+  ),
+);
+
+// Picks the category for a product name (spec 10.2). Returns a category id,
+// or null for "Bez kategorii". Checked in this order:
+//   1. memory – what the user chose before for this name, null included
+//      (choosing "Bez kategorii" turns the dictionary off for that name),
+//   2. the dictionary, whole name: "mleko 2 l" → "mleko",
+//   3. the dictionary, first word only: "mleko owsiane" → "mleko",
+//   4. null.
+// Ids of categories the user has deleted are skipped at every step.
+export function findCategoryId(fullName, categories, memory) {
+  const key = duplicateKey(fullName);
+  const exists = (id) => categories.some((category) => category.id === id);
+
+  // Object.hasOwn, not memory[key]: a remembered null must count as an answer,
+  // and names like "constructor" must not find built-in object properties.
+  if (Object.hasOwn(memory, key)) {
+    const remembered = memory[key];
+    if (remembered === null || exists(remembered)) return remembered;
+  }
+
+  const firstWord = key.split(' ')[0];
+  for (const candidate of [key, firstWord]) {
+    const id = DICTIONARY_INDEX.get(candidate);
+    if (id && exists(id)) return id;
+  }
+  return null;
 }
 
 // Returns null for a valid name, otherwise the reason it is invalid.
