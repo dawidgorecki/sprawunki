@@ -8,8 +8,8 @@ import { enableDragging } from './drag.js';
 const MESSAGE_DURATION_MS = 5000;
 
 // handlers: { onAdd(name), onToggle(itemId), onRename(itemId, name),
-//             onRemove(itemId), onMove(itemId, toIndex), onClearChecked(),
-//             onToggleWakeLock() }
+//             onRemove(itemId), onMove(itemId, toIndex),
+//             onSetCategory(itemId, categoryId), onClearChecked(), onToggleWakeLock() }
 // Returns functions main.js uses to update the screen.
 export function createUI(handlers) {
   const elements = {
@@ -40,12 +40,17 @@ export function createUI(handlers) {
   const main = document.querySelector('main');
 
   main.addEventListener('change', (event) => {
-    if (!event.target.matches('.item-checkbox')) return;
+    const itemId = event.target.closest('li')?.dataset.id;
 
-    const itemId = event.target.closest('li').dataset.id;
-    handlers.onToggle(itemId);
-    // Render replaced the checkbox with a new element; keep keyboard focus on it.
-    findItemElement(itemId)?.querySelector('.item-checkbox').focus();
+    if (event.target.matches('.item-checkbox')) {
+      handlers.onToggle(itemId);
+      // Render replaced the checkbox with a new element; keep keyboard focus on it.
+      findItemElement(itemId)?.querySelector('.item-checkbox').focus();
+    } else if (event.target.matches('.item-category select')) {
+      // An <option> value is always a string, so "Bez kategorii" uses '' for null.
+      handlers.onSetCategory(itemId, event.target.value || null);
+      findItemElement(itemId)?.querySelector('.item-category select').focus();
+    }
   });
 
   main.addEventListener('click', (event) => {
@@ -216,23 +221,30 @@ function render(elements, state) {
   elements.progress.textContent = `${checked} z ${total} kupione`;
 
   elements.toBuySection.hidden = groups.length === 0;
-  elements.toBuyGroups.replaceChildren(...createGroupElements(groups));
+  elements.toBuyGroups.replaceChildren(...createGroupElements(groups, state.categories));
 
   // "Wyczyść kupione" is inside this section, so it is visible only when there are bought items.
   elements.boughtSection.hidden = bought.length === 0;
-  elements.boughtList.replaceChildren(...bought.map(createItemElement));
+  // Bought items get no category picker (spec 10.2).
+  elements.boughtList.replaceChildren(...bought.map((item) => createItemElement(item)));
 }
 
 // Builds a heading and a list for every group:
 //   <h3>Nabiał</h3> <ul> items… </ul>
 // When everything is in "Bez kategorii", the heading is left out and the list
 // looks like before categories existed (spec 10.3).
-function createGroupElements(groups) {
+function createGroupElements(groups, categories) {
   const onlyUncategorized = groups.length === 1 && groups[0].category === null;
 
   return groups.flatMap((group) => {
+    // The group's category, not item.categoryId: that may point to a deleted category.
+    const selectedId = group.category?.id ?? null;
     const list = document.createElement('ul');
-    list.append(...group.items.map(createItemElement));
+    list.append(
+      ...group.items.map((item) =>
+        createItemElement(item, createCategoryPicker(item, categories, selectedId)),
+      ),
+    );
     if (onlyUncategorized) return [list];
 
     const heading = document.createElement('h3');
@@ -243,10 +255,12 @@ function createGroupElements(groups) {
   });
 }
 
-// Builds: <li data-id> [handle] [checkbox] [name button: name + quantity label] [remove button] </li>
-// The reorder handle is only on "to buy" items (spec 9.2).
+// Builds: <li data-id> [handle] [checkbox] [name button: name + quantity label]
+//                       [category picker] [remove button] </li>
+// The reorder handle is only on "to buy" items (spec 9.2); the category picker
+// is passed in only for them too.
 // All text goes through textContent or setAttribute, never innerHTML: the name is user input.
-function createItemElement(item) {
+function createItemElement(item, categoryPicker = null) {
   const li = document.createElement('li');
   li.dataset.id = item.id;
   li.classList.toggle('checked', item.checked);
@@ -276,8 +290,39 @@ function createItemElement(item) {
   if (!item.checked) {
     li.append(createHandle(item));
   }
-  li.append(checkbox, name, remove);
+  li.append(checkbox, name);
+  if (categoryPicker) {
+    li.append(categoryPicker);
+  }
+  li.append(remove);
   return li;
+}
+
+// A native <select> made invisible and laid over a tag icon (spec 10.2). The
+// phone opens its own list to pick from, keyboard and screen readers work out
+// of the box, and the row only needs room for the icon, not for the name.
+function createCategoryPicker(item, categories, selectedId) {
+  const wrapper = document.createElement('span');
+  wrapper.className = 'item-category';
+  // The icon lives in a <template> in index.html, so the SVG is not built in JS.
+  wrapper.append(document.getElementById('category-icon').content.cloneNode(true));
+
+  const select = document.createElement('select');
+  select.setAttribute('aria-label', `Kategoria: ${item.name}`);
+  const choices = [
+    ...categories.map((category) => ({ value: category.id, label: category.name })),
+    { value: '', label: 'Bez kategorii' },
+  ];
+  for (const choice of choices) {
+    const option = document.createElement('option');
+    option.value = choice.value;
+    option.textContent = choice.label; // category names are typed by the user
+    option.selected = choice.value === (selectedId ?? '');
+    select.append(option);
+  }
+
+  wrapper.append(select);
+  return wrapper;
 }
 
 function createHandle(item) {

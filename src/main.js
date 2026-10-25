@@ -8,6 +8,7 @@ import {
   renameItem,
   removeItem,
   moveItem,
+  setItemCategory,
   clearChecked,
 } from './store.js';
 import { loadState, saveState } from './storage.js';
@@ -84,6 +85,15 @@ const ui = createUI({
     if (newState !== state) {
       update(newState);
     }
+  },
+
+  onSetCategory(itemId, categoryId) {
+    const newState = setItemCategory(state, itemId, categoryId);
+    if (newState === state) return;
+
+    update(newState);
+    // The item may now be in a group far away on the screen: show where it went.
+    ui.highlightItem(itemId);
   },
 
   onClearChecked() {

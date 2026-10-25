@@ -346,6 +346,34 @@ body.is-dragging .item-handle {
 }
 
 /* Line-through doesn't reach inline-block children, so the label stays readable, just faded. */
+/* Category picker (spec 10.2): the icon is what you see, the transparent
+   <select> laid over it is what you tap. */
+.item-category {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  color: var(--color-muted);
+}
+
+.item-category select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* The <select> itself is invisible, so its keyboard focus ring is drawn on the wrapper. */
+.item-category:has(select:focus-visible) {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 li.checked .item-name {
   text-decoration: line-through;
   color: var(--color-muted);
