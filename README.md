@@ -78,7 +78,7 @@ e2e/               # testy interfejsu (Playwright)
 docs/screenshots/  # zrzuty ekranu do tego pliku
 ```
 
-Pełna specyfikacja: [SPEC.md](SPEC.md).
+Pełna specyfikacja: [SPEC.md](SPEC.md), plan prac: [PLAN.md](PLAN.md).
 
 ## Licencja
 

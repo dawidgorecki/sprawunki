@@ -1,4 +1,6 @@
-# Sprawunki — specyfikacja wersji 1
+# Sprawunki — specyfikacja
+
+Co i jak ma działać w kolejnych wersjach. Kolejność implementacji, kryteria ukończenia i stan wersji są w [PLAN.md](PLAN.md).
 
 ## 1. Cel
 
@@ -132,30 +134,14 @@ Zapisywany pod jednym kluczem localStorage `sprawunki`, jako JSON:
 
 ## 6. Poza zakresem wersji 1
 
-- **Wersja 2:** podzielona na **2.0 — kategorie** (działy sklepu, własna kolejność, zapamiętywanie kategorii produktu; punkt 10) i **2.1 — wiele list** (specyfikacja później).
-- **Później:** podpowiedzi z historii, udostępnianie listy linkiem, eksport/import kopii zapasowej, ~~blokada wygaszania ekranu, zmiana kolejności przeciąganiem, parsowanie ilości~~ (przeniesione do wersji 1.1, punkt 9).
+- **Wersja 2:** podzielona na **2.0 — kategorie** (działy sklepu, własna kolejność, zapamiętywanie kategorii produktu; punkt 10) i **2.1 — wiele list** (punkt 11).
+- **Wersja 2.2 (planowana):** eksport/import kopii zapasowej.
+- **Później:** podpowiedzi z historii, udostępnianie listy linkiem, przenoszenie produktu między listami, ~~blokada wygaszania ekranu, zmiana kolejności przeciąganiem, parsowanie ilości~~ (przeniesione do wersji 1.1, punkt 9).
 - **Nigdy (w obecnych założeniach):** synchronizacja między osobami lub urządzeniami, konta, ceny i budżet, powiadomienia, reklamy i analityka.
 
-## 7. Kolejność implementacji
+## 7–8. Kolejność implementacji i kryteria ukończenia
 
-1. Szkielet projektu: Vite, czysty JS, Vitest, pusta strona działająca lokalnie.
-2. Logika listy (`store.js`) z testami: dodawanie, duplikaty, odhaczanie, edycja, usuwanie, czyszczenie, sortowanie.
-3. Zapis i odczyt (`storage.js`) z obsługą błędów i testami.
-4. Interfejs: lista, sekcje, licznik, pusty stan, dodawanie.
-5. Interfejs: edycja w miejscu, usuwanie, czyszczenie kupionych.
-6. Wygląd: style mobilne, tryb ciemny.
-7. PWA: manifest, ikony, service worker.
-8. Publikacja na GitHub Pages przez GitHub Actions (repozytorium `sprawunki`, adres `https://<login>.github.io/sprawunki/`); test instalacji na telefonie.
-9. Opcjonalnie: „Cofnij”.
-10. Test w prawdziwym sklepie i poprawki.
-
-## 8. Kryteria ukończenia wersji 1
-
-- Wszystkie funkcje z punktów 3.1–3.7 i 3.9 działają na telefonie z Androidem.
-- Aplikacja zainstalowana na ekranie głównym działa w trybie samolotowym.
-- Dane przetrwają zamknięcie aplikacji i restart telefonu.
-- Testy logiki przechodzą (`npm test`).
-- Aplikacja jest opublikowana pod adresem GitHub Pages.
+Przeniesione do [PLAN.md](PLAN.md). Numeracja pozostałych punktów się nie zmienia, bo odwołuje się do niej kod.
 
 ## 9. Wersja 1.1
 
@@ -206,25 +192,9 @@ Trzy usprawnienia do używania w sklepie. Wersja 2 (kategorie, wiele list) pozos
 - Brak API (`'wakeLock' in navigator` jest fałszywe): przycisk jest ukryty.
 - Kod w osobnym module `src/wake-lock.js`, bo nie jest to ani logika listy, ani zapis danych.
 
-### 9.4 Kolejność implementacji
-
-1. Parsowanie ilości w `store.js` (`parseQuantity`) i nowe porównywanie duplikatów, z testami.
-2. Interfejs: etykieta ilości.
-3. Ręczna kolejność w `store.js` (`getSections` według tablicy, `moveItem`), z testami.
-4. Interfejs: uchwyt i przesuwanie klawiaturą.
-5. Interfejs: przeciąganie palcem i myszą.
-6. Blokada wygaszania ekranu.
-7. Test na telefonie, aktualizacja README, publikacja.
-
-### 9.5 Kryteria ukończenia
-
-- Funkcje 9.1–9.3 działają w Chrome na Androidzie; na iOS aplikacja działa bez błędów (Wake Lock może być niedostępny).
-- Dane z wersji 1 wczytują się bez zmian i w dotychczasowej kolejności.
-- Testy przechodzą (`npm test`).
-
 ## 10. Wersja 2.0 — kategorie
 
-Produkty do kupienia są pogrupowane według działów sklepu, w kolejności, w jakiej chodzi się po sklepie. Wiele list to osobna wersja 2.1 (specyfikacja później).
+Produkty do kupienia są pogrupowane według działów sklepu, w kolejności, w jakiej chodzi się po sklepie. Wiele list to osobna wersja 2.1 (punkt 11).
 
 ### 10.1 Kategorie
 
@@ -313,19 +283,54 @@ Wersja danych **2** (`version: 2`). Nowe pola na najwyższym poziomie:
 - Starsza wersja aplikacji nie zna wersji danych 2. Nie jest to problem, bo aktualizacja instaluje się automatycznie (3.9), a stara wersja nie nadpisze danych (4.2).
 - Słownik jest w osobnym pliku `src/product-dictionary.js` (dane, bez logiki).
 
-### 10.7 Kolejność implementacji
+## 11. Wersja 2.1 — wiele list
 
-1. Kategorie domyślne, słownik i dobieranie kategorii (czyste funkcje), z testami.
-2. Model danych 2 i migracja w `storage.js`, z testami.
-3. `store.js`: kategoria przy dodawaniu, zmiana kategorii z pamięcią, grupy w `getSections`, z testami.
-4. `moveItem` w obrębie grupy (z testami) i interfejs: grupy z podtytułami, przeciąganie i strzałki w grupie. Razem, bo pozycja w grupie ma sens dopiero wtedy, gdy interfejs pokazuje grupy.
-5. Interfejs: przycisk kategorii przy produkcie.
-6. `store.js`: dodawanie, zmiana nazwy, usuwanie i zmiana kolejności kategorii, z testami.
-7. Interfejs: okno zarządzania kategoriami.
-8. Test w sklepie, README, wersja 2.0.0, publikacja.
+Osobne listy, np. na spożywczy, drogerię i aptekę. Kategorie (punkt 10) są wspólne dla wszystkich list.
 
-### 10.8 Kryteria ukończenia
+### 11.1 Listy
 
-- Funkcje 10.1–10.5 działają w Chrome na Androidzie.
-- Dane z wersji 1.1 wczytują się po migracji bez utraty produktów, z zachowaniem kolejności i z kategoriami ze słownika.
-- Testy przechodzą (`npm test`).
+- Na start jest jedna lista „Zakupy”, jak dotąd.
+- Listy można dodawać, zmieniać im nazwy, usuwać i ustawiać ich kolejność (11.3).
+- Nazwa listy: niepusta, maks. 40 znaków, bez duplikatów (porównanie jak w 3.2, bez parsowania ilości), czyli tak samo jak nazwa kategorii (10.1).
+- Zawsze istnieje co najmniej jedna lista.
+- Wszystkie działania na produktach (dodawanie, duplikaty, odhaczanie, edycja, usuwanie, „Wyczyść kupione”, kolejność, licznik postępu) dotyczą tylko **aktywnej listy**. Ten sam produkt może być na kilku listach.
+- Kategorie i pamięć kategorii (10.4) są wspólne: „mleko” trafi do Nabiału na każdej liście.
+
+### 11.2 Wybór listy
+
+- Przycisk z nazwą aktywnej listy i znakiem ▾ w nagłówku, pod tytułem „Sprawunki”. `aria-label` „Lista: <nazwa>”, `aria-haspopup="dialog"`.
+- **Przy jednej liście przycisku nie ma**, więc nagłówek wygląda jak w wersji 2.0.
+- Przycisk otwiera okno wyboru (`<dialog>`, modalne; Escape i przycisk „Zamknij” zamykają) z tytułem „Wybierz listę”.
+- W oknie są wszystkie listy w ich kolejności. Przy każdej:
+  - nazwa,
+  - licznik „kupione/wszystkie”, np. „3/7”; przy pustej liście licznika nie ma.
+- Aktywna lista jest oznaczona znakiem ✓ i `aria-current="true"`.
+- Tapnięcie listy przełącza na nią i zamyka okno.
+- Przy wielu listach okno się przewija.
+- Własne okno zamiast systemowego `<select>`: `<select>` nie pokazuje licznika, a na Androidzie dodaje strzałki nawigacji formularza (zob. wybór kategorii, 10.2).
+- Przełączenie listy, jak każda zmiana stanu, ukrywa komunikat „Cofnij” (3.8).
+- Aplikacja zapamiętuje aktywną listę (`activeListId`) i po uruchomieniu otwiera ostatnio używaną.
+
+### 11.3 Zarządzanie listami
+
+- Osobny przycisk w nagłówku, obok przycisku kategorii (ikona, `aria-label` „Listy”). Jest widoczny zawsze, także przy jednej liście, bo tylko tędy dodaje się drugą listę.
+- Otwiera okno „Listy” działające tak jak okno kategorii (10.5):
+  - uchwyt ≡: przeciąganie i strzałki jak w 9.2;
+  - nazwa: tapnięcie włącza edycję w miejscu (pusta nazwa przywraca poprzednią, duplikat jest odrzucany z komunikatem);
+  - przycisk usuwania ×, `aria-label` „Usuń listę: <nazwa>”;
+  - pod listą pole i przycisk „Dodaj listę”, przyklejone do dołu okna. Nowa lista trafia na koniec, okno przewija się do niej. Dodanie listy **nie przełącza** na nią, żeby można było dodać kilka list pod rząd.
+- Kolejność list w oknie „Listy” to kolejność w oknie wyboru (11.2).
+- **Usuwanie:**
+  - pusta lista jest usuwana od razu;
+  - lista z produktami wymaga potwierdzenia (`confirm()`: „Usunąć listę „<nazwa>” razem z produktami?”);
+  - przy ostatniej liście przycisk × jest nieaktywny (`disabled`);
+  - po usunięciu aktywnej listy aktywna staje się pierwsza lista w kolejności;
+  - bez „Cofnij”, bo pasek komunikatów jest zasłonięty przez okno (jak w 10.5).
+
+### 11.4 Dane
+
+- **Wersja danych zostaje 2, bez migracji.** Model od wersji 1 przewiduje wiele list (4.1): tablica `lists` i `activeListId`.
+- Kolejność list to kolejność tablicy `lists`.
+- Nowe listy dostają `l_` + `crypto.randomUUID()`.
+- Odczyt już teraz sprawdza, czy `activeListId` wskazuje istniejącą listę; w razie błędu działa 4.2.
+- Wersja 2.0 aplikacji poprawnie odczyta dane z kilkoma listami (pokaże tylko aktywną), więc aktualizacja jest bezpieczna w obie strony.
