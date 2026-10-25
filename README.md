@@ -5,8 +5,9 @@ Sprawunki to prosta aplikacja webowa (PWA) do prowadzenia listy zakupów: w cią
 **Aplikacja: https://dawidgorecki.github.io/sprawunki/**
 
 <p>
-  <img src="docs/screenshots/lista-jasny.png" alt="Lista zakupów pogrupowana według działów sklepu: Warzywa i owoce, Pieczywo, Nabiał, Napoje; ilości jako etykiety, np. „1 kg”, „2 l”; pod spodem sekcja Kupione" width="260">
+  <img src="docs/screenshots/lista-jasny.png" alt="Lista „Zakupy” pogrupowana według działów sklepu: Warzywa i owoce, Pieczywo, Nabiał, Napoje; ilości jako etykiety, np. „1 kg”, „2 l”; pod spodem sekcja Kupione" width="260">
   <img src="docs/screenshots/lista-ciemny.png" alt="Ta sama lista w trybie ciemnym" width="260">
+  <img src="docs/screenshots/listy.png" alt="Okno Wybierz listę z listami Zakupy (aktywna, 2/7), Drogeria (1/3) i Apteka" width="260">
   <img src="docs/screenshots/kategorie.png" alt="Okno Kategorie z listą działów do przestawiania, zmiany nazwy i usuwania oraz polem do dodania nowej kategorii" width="260">
 </p>
 
@@ -16,6 +17,7 @@ Sprawunki to prosta aplikacja webowa (PWA) do prowadzenia listy zakupów: w cią
 - Wykrywanie duplikatów bez względu na ilość: ponowne wpisanie produktu, który już jest na liście, nie dodaje go drugi raz. Wpis z nową ilością („mleko 3 l”) ją zmienia, a kupiony produkt wraca do „Do kupienia”.
 - Kategorie, czyli działy sklepu: produkty do kupienia są pogrupowane w kolejności, w jakiej chodzisz po sklepie. Aplikacja zna kategorie ok. 200 popularnych produktów, a gdy zmienisz kategorię ręcznie, zapamięta ją na następny raz.
 - Własne kategorie: w oknie „Kategorie” dodasz nowe, zmienisz nazwy, usuniesz zbędne i ustawisz kolejność pod swój sklep.
+- Osobne listy, np. na spożywczy, drogerię i aptekę. W oknie „Listy” dodasz nowe, zmienisz nazwy, usuniesz zbędne i ustawisz kolejność. Przy kilku listach pod tytułem pojawia się nazwa aktywnej listy: tapnięcie pokazuje wszystkie listy z licznikiem kupionych produktów i przełącza między nimi. Kategorie są wspólne dla wszystkich list.
 - Zmiana kolejności produktów w obrębie kategorii: przeciągnij za uchwyt ≡ albo użyj strzałek na klawiaturze.
 - Przełącznik w nagłówku, który nie pozwala ekranowi zgasnąć w trakcie zakupów (tam, gdzie przeglądarka to obsługuje).
 - Dwie sekcje, „Do kupienia” i „Kupione”, oraz licznik postępu, np. „3 z 8 kupione”.
@@ -33,9 +35,9 @@ Aktualizacje instalują się same: nowa wersja pobiera się w tle i działa od k
 
 ## Prywatność
 
-Aplikacja nie ma serwera ani kont. Lista jest zapisana tylko w pamięci przeglądarki na Twoim urządzeniu (localStorage) i nigdzie nie jest wysyłana. Aplikacja nie korzysta z żadnych zewnętrznych usług ani analityki.
+Aplikacja nie ma serwera ani kont. Listy są zapisane tylko w pamięci przeglądarki na Twoim urządzeniu (localStorage) i nigdzie nie jest wysyłana. Aplikacja nie korzysta z żadnych zewnętrznych usług ani analityki.
 
-Wyczyszczenie danych przeglądarki lub odinstalowanie aplikacji usuwa listę.
+Wyczyszczenie danych przeglądarki lub odinstalowanie aplikacji usuwa listy.
 
 ## Dla programistów
 
