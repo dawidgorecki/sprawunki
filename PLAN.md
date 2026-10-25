@@ -8,8 +8,8 @@ Kolejność implementacji i kryteria ukończenia kolejnych wersji. Co i jak ma d
 | --- | --- | --- | --- |
 | 1.0 | Jedna lista: dodawanie, odhaczanie, edycja, usuwanie, PWA | 3, 4 | ukończona |
 | 1.1 | Parsowanie ilości, zmiana kolejności, blokada wygaszania ekranu | 9 | ukończona |
-| 2.0 | Kategorie | 10 | opublikowana, test w sklepie |
-| 2.1 | Wiele list | 11 | opublikowana, test na telefonie |
+| 2.0 | Kategorie | 10 | ukończona |
+| 2.1 | Wiele list | 11 | ukończona |
 | 2.2 | Eksport/import kopii zapasowej | — | planowana |
 
 Pomysły na później i rzeczy poza zakresem: punkt 6 specyfikacji.
