@@ -3,3 +3,7 @@ dist/
 
 # Windows metadata files created when copying files into WSL
 *:Zone.Identifier
+
+# Playwright: results and report of the last browser test run
+test-results/
+playwright-report/

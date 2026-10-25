@@ -40,10 +40,14 @@ Wymagany Node.js 20.19+ lub 22.12+.
 ```bash
 npm install        # instalacja zależności
 npm run dev        # serwer deweloperski: http://localhost:5173/sprawunki/
-npm test           # testy
+npm test           # testy logiki (Vitest)
+npm run test:e2e   # testy interfejsu w przeglądarce (Playwright)
+npm run test:e2e:ui  # to samo z podglądem każdego kroku
 npm run build      # build do dist/
 npm run preview    # podgląd builda (tu działa service worker i tryb offline)
 ```
+
+Testy interfejsu klikają w prawdziwą aplikację w Chromium, na komputerze i na emulowanym telefonie z ekranem dotykowym. Przed pierwszym uruchomieniem pobierz przeglądarkę: `npx playwright install chromium`. W WSL lub na świeżym Linuksie potrzebne są też biblioteki systemowe: `sudo env "PATH=$PATH" npx playwright install-deps chromium`. Testy interfejsu działają tylko lokalnie, nie w GitHub Actions.
 
 Każdy push na gałąź `main` uruchamia GitHub Actions (`.github/workflows/deploy.yml`). Workflow uruchamia testy, buduje aplikację i publikuje ją na GitHub Pages.
 
@@ -60,7 +64,8 @@ src/
   wake-lock.js     # blokada wygaszania ekranu (Screen Wake Lock API)
   styles.css
 public/            # favicon i ikony aplikacji
-tests/             # testy store.js i storage.js
+tests/             # testy logiki: store.js i storage.js (Vitest)
+e2e/               # testy interfejsu (Playwright)
 ```
 
 ### Kolory i ikona

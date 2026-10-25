@@ -14,6 +14,7 @@ Autor programuje zawodowo w PHP i zna podstawy JavaScriptu. Projekt służy też
 - Czysty JavaScript, moduły ES. **Bez frameworków** (React, Vue, Alpine itd.) i bez TypeScriptu
 - vite-plugin-pwa (manifest i service worker)
 - Vitest (testy logiki)
+- Playwright Test (testy interfejsu w Chromium: komputer i emulowany telefon z dotykiem; tylko lokalnie, nie w CI)
 - Hosting: GitHub Pages przez GitHub Actions
 
 Zależności tylko jako `devDependencies`. Nie dodawaj nowych bibliotek bez pytania.
@@ -23,7 +24,9 @@ Zależności tylko jako `devDependencies`. Nie dodawaj nowych bibliotek bez pyta
 ```bash
 npm install        # instalacja
 npm run dev        # serwer deweloperski
-npm test           # testy (Vitest, jednorazowo)
+npm test           # testy logiki (Vitest, jednorazowo)
+npm run test:e2e   # testy interfejsu (Playwright; sam uruchamia serwer deweloperski)
+npm run test:e2e:ui  # to samo z oknem pokazującym każdy krok
 npm run build      # build do dist/
 npm run preview    # podgląd builda (tu działa service worker)
 ```
@@ -46,6 +49,9 @@ public/
 tests/
   store.test.js
   storage.test.js
+e2e/             # testy interfejsu (Playwright), *.spec.js
+  helpers.js
+playwright.config.js
 .github/workflows/deploy.yml
 ```
 
@@ -65,6 +71,7 @@ tests/
 
 - Pracuj małymi krokami według kolejności implementacji w `SPEC.md` (obecnie punkt 10.7 — wersja 2.0). Jeden krok = jedna logiczna zmiana.
 - Do każdej zmiany w `store.js` lub `storage.js` dodaj albo zaktualizuj testy. Po zmianie uruchom `npm test`.
+- Do każdej zmiany w interfejsie dodaj albo zaktualizuj testy w `e2e/` i uruchom `npm run test:e2e`. Elementy wyszukuj po roli i etykiecie (`getByRole`), jak użytkownik i czytnik ekranu. Testy przeglądarkowe nie zastępują ręcznego testu autora.
 - Nie dodawaj funkcji spoza zakresu wersji 1, 1.1 i 2.0 (punkty 3, 9 i 10 w `SPEC.md`; to, co poza zakresem, opisuje punkt 6). Jeśli coś wydaje się potrzebne, zapytaj.
 - Gdy specyfikacja jest niejasna, zapytaj zamiast zgadywać.
 - Po zakończeniu kroku krótko wyjaśnij, co zmieniłeś i dlaczego (autor się uczy), oraz zaproponuj komunikat commita.
