@@ -4,7 +4,7 @@ Instrukcje dla Claude Code w tym projekcie.
 
 ## Projekt
 
-**Sprawunki** — aplikacja PWA do listy zakupów: jedna lista, dodawanie, odhaczanie, edycja, usuwanie produktów; w wersji 1.1 także parsowanie ilości, zmiana kolejności przeciąganiem i blokada wygaszania ekranu; dane w localStorage; pełne działanie offline. **Pełna specyfikacja: `SPEC.md`. Przed każdym zadaniem sprawdź, czego dotyczy w specyfikacji.**
+**Sprawunki** — aplikacja PWA do listy zakupów: jedna lista, dodawanie, odhaczanie, edycja, usuwanie produktów; w wersji 1.1 także parsowanie ilości, zmiana kolejności przeciąganiem i blokada wygaszania ekranu; w wersji 2.0 kategorie (działy sklepu); wiele list w wersji 2.1; dane w localStorage; pełne działanie offline. **Pełna specyfikacja: `SPEC.md`. Przed każdym zadaniem sprawdź, czego dotyczy w specyfikacji.**
 
 Autor programuje zawodowo w PHP i zna podstawy JavaScriptu. Projekt służy też nauce, więc kod ma być czytelny i zrozumiały bez znajomości frameworków.
 
@@ -39,6 +39,7 @@ src/
   ui.js          # renderowanie i obsługa zdarzeń DOM
   drag.js        # zmiana kolejności przeciąganiem (wersja 1.1)
   wake-lock.js   # blokada wygaszania ekranu (wersja 1.1)
+  product-dictionary.js  # słownik produkt → kategoria domyślna (wersja 2.0, same dane)
   styles.css
 public/
   icons/         # ikony PWA
@@ -54,7 +55,7 @@ tests/
 - **Renderowanie:** po każdej zmianie stanu zapisz go i wyrenderuj listę od nowa. Prosto, bez optymalizacji na zapas.
 - **Bezpieczeństwo:** tekst od użytkownika tylko przez `textContent`. Nigdy `innerHTML` z danymi użytkownika.
 - **Nazewnictwo:** kod, nazwy zmiennych i komentarze po angielsku; teksty w interfejsie po polsku.
-- **Model danych** zgodny z `SPEC.md` (punkt 4). Zachowaj strukturę przewidującą wiele list i kategorie, nawet jeśli w wersji 1 są nieużywane.
+- **Model danych** zgodny z `SPEC.md` (punkt 4, od wersji 2.0 punkt 10.6). Zachowaj strukturę przewidującą wiele list i kategorie, nawet jeśli w wersji 1 są nieużywane.
 - Proste, krótkie funkcje. Komentarz tam, gdzie decyzja nie jest oczywista.
 - CSS: zmienne dla kolorów, tryb ciemny przez `prefers-color-scheme`, układ mobile first.
 - Repozytorium nazywa się `sprawunki`; GitHub Pages serwuje aplikację spod `/sprawunki/`, więc w `vite.config.js` ustaw `base: '/sprawunki/'` i używaj ścieżek zgodnych z tym ustawieniem (także w manifeście PWA).
@@ -62,8 +63,8 @@ tests/
 
 ## Sposób pracy
 
-- Pracuj małymi krokami według kolejności implementacji w `SPEC.md` (obecnie punkt 9.4 — wersja 1.1). Jeden krok = jedna logiczna zmiana.
+- Pracuj małymi krokami według kolejności implementacji w `SPEC.md` (obecnie punkt 10.7 — wersja 2.0). Jeden krok = jedna logiczna zmiana.
 - Do każdej zmiany w `store.js` lub `storage.js` dodaj albo zaktualizuj testy. Po zmianie uruchom `npm test`.
-- Nie dodawaj funkcji spoza zakresu wersji 1 i 1.1 (punkty 3 i 9 w `SPEC.md`; to, co poza zakresem, opisuje punkt 6). Jeśli coś wydaje się potrzebne, zapytaj.
+- Nie dodawaj funkcji spoza zakresu wersji 1, 1.1 i 2.0 (punkty 3, 9 i 10 w `SPEC.md`; to, co poza zakresem, opisuje punkt 6). Jeśli coś wydaje się potrzebne, zapytaj.
 - Gdy specyfikacja jest niejasna, zapytaj zamiast zgadywać.
 - Po zakończeniu kroku krótko wyjaśnij, co zmieniłeś i dlaczego (autor się uczy), oraz zaproponuj komunikat commita.
