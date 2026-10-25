@@ -317,8 +317,8 @@ Wersja danych **2** (`version: 2`). Nowe pola na najwyższym poziomie:
 
 1. Kategorie domyślne, słownik i dobieranie kategorii (czyste funkcje), z testami.
 2. Model danych 2 i migracja w `storage.js`, z testami.
-3. `store.js`: kategoria przy dodawaniu, zmiana kategorii z pamięcią, grupy w `getSections`, `moveItem` w obrębie grupy, z testami.
-4. Interfejs: grupy z podtytułami; przeciąganie i strzałki w grupie.
+3. `store.js`: kategoria przy dodawaniu, zmiana kategorii z pamięcią, grupy w `getSections`, z testami.
+4. `moveItem` w obrębie grupy (z testami) i interfejs: grupy z podtytułami, przeciąganie i strzałki w grupie. Razem, bo pozycja w grupie ma sens dopiero wtedy, gdy interfejs pokazuje grupy.
 5. Interfejs: przycisk kategorii przy produkcie.
 6. `store.js`: dodawanie, zmiana nazwy, usuwanie i zmiana kolejności kategorii, z testami.
 7. Interfejs: okno zarządzania kategoriami.
