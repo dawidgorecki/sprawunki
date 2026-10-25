@@ -6,6 +6,7 @@ import {
   parseQuantity,
   DEFAULT_CATEGORIES,
   findCategoryId,
+  setItemCategory,
   getActiveList,
   addItem,
   toggleItem,
@@ -33,6 +34,18 @@ function items(state) {
 
 function names(list) {
   return list.map((item) => item.name);
+}
+
+function sections(state) {
+  return getSections(getActiveList(state), state.categories);
+}
+
+// Group headings and item names, e.g. [['Nabiał', 'mleko'], [null, 'baterie']].
+function groupNames(state) {
+  return sections(state).groups.map((group) => [
+    group.category?.name ?? null,
+    ...names(group.items),
+  ]);
 }
 
 describe('createInitialState', () => {
@@ -75,7 +88,7 @@ describe('addItem', () => {
       checked: false,
       createdAt: 5000,
       checkedAt: null,
-      categoryId: null,
+      categoryId: 'c_dairy', // from the dictionary
     });
   });
 
@@ -281,7 +294,7 @@ describe('clearChecked', () => {
 describe('moveItem', () => {
   // Returns the "to buy" names in the order shown on screen.
   function toBuyNames(state) {
-    return names(getSections(getActiveList(state)).toBuy);
+    return names(sections(state).toBuy);
   }
 
   it('moves an item up', () => {
@@ -349,13 +362,13 @@ describe('moveItem', () => {
 
 describe('getSections', () => {
   it('orders "to buy" by creation, oldest first', () => {
-    const { toBuy } = getSections(getActiveList(stateWith('chleb', 'mleko', 'masło')));
+    const { toBuy } = sections(stateWith('chleb', 'mleko', 'masło'));
     expect(names(toBuy)).toEqual(['chleb', 'mleko', 'masło']);
   });
 
   it('orders "to buy" by the items array, not by creation time', () => {
     const state = moveItem(stateWith('chleb', 'mleko', 'masło'), 'i_3', 0);
-    const { toBuy } = getSections(getActiveList(state));
+    const { toBuy } = sections(state);
     expect(names(toBuy)).toEqual(['masło', 'chleb', 'mleko']);
   });
 
@@ -369,7 +382,7 @@ describe('getSections', () => {
         { id: 'i_2', name: 'mleko', checked: false, createdAt: 2000, checkedAt: null, categoryId: null },
       ],
     };
-    expect(names(getSections(list).toBuy)).toEqual(['chleb', 'mleko']);
+    expect(names(getSections(list, DEFAULT_CATEGORIES).toBuy)).toEqual(['chleb', 'mleko']);
   });
 
   it('orders "bought" by check time, most recent first', () => {
@@ -377,7 +390,7 @@ describe('getSections', () => {
     state = toggleItem(state, 'i_1', 9000);
     state = toggleItem(state, 'i_3', 9100);
 
-    const { toBuy, bought } = getSections(getActiveList(state));
+    const { toBuy, bought } = sections(state);
     expect(names(toBuy)).toEqual(['mleko']);
     expect(names(bought)).toEqual(['masło', 'chleb']);
   });
@@ -387,13 +400,13 @@ describe('getSections', () => {
     state = toggleItem(state, 'i_1', 9000);
     state = toggleItem(state, 'i_1', 9100);
 
-    const { toBuy } = getSections(getActiveList(state));
+    const { toBuy } = sections(state);
     expect(names(toBuy)).toEqual(['chleb', 'mleko', 'masło']);
   });
 
   it('does not reorder the stored items', () => {
     const state = toggleItem(stateWith('chleb', 'mleko'), 'i_2', 9000);
-    getSections(getActiveList(state));
+    sections(state);
     expect(names(items(state))).toEqual(['chleb', 'mleko']);
   });
 });
@@ -492,5 +505,131 @@ describe('findCategoryId', () => {
   it('works for names that are also built-in object properties', () => {
     expect(findCategoryId('constructor', categories, {})).toBeNull();
     expect(findCategoryId('toString', categories, {})).toBeNull();
+  });
+});
+
+describe('addItem with categories', () => {
+  it('picks the category from the dictionary', () => {
+    const { state } = addItem(stateWith(), 'Mleko 2 l', { id: 'i_1', now: 1 });
+    expect(items(state)[0].categoryId).toBe('c_dairy');
+  });
+
+  it('leaves an unknown product without a category', () => {
+    const { state } = addItem(stateWith(), 'baterie', { id: 'i_1', now: 1 });
+    expect(items(state)[0].categoryId).toBeNull();
+  });
+
+  it('uses the remembered choice', () => {
+    const start = { ...stateWith(), categoryMemory: { baterie: 'c_household' } };
+    const { state } = addItem(start, 'Baterie AA', { id: 'i_1', now: 1 });
+    // "baterie aa" is not remembered, only "baterie": the first word is not used for memory.
+    expect(items(state)[0].categoryId).toBeNull();
+
+    const exact = addItem(start, 'Baterie', { id: 'i_2', now: 2 }).state;
+    expect(items(exact)[0].categoryId).toBe('c_household');
+  });
+
+  it('does not change the category of a duplicate', () => {
+    let state = setItemCategory(stateWith('mleko'), 'i_1', 'c_drinks');
+    state = addItem(state, 'mleko 3 l', { id: 'i_9', now: 9000 }).state;
+    expect(items(state)[0].categoryId).toBe('c_drinks');
+  });
+
+  it('keeps the category when the item is renamed', () => {
+    const { state } = renameItem(stateWith('mleko'), 'i_1', 'chleb');
+    expect(items(state)[0].categoryId).toBe('c_dairy');
+  });
+});
+
+describe('setItemCategory', () => {
+  it('changes the category and moves the item to the end of its new group', () => {
+    let state = stateWith('ser', 'mleko', 'woda');
+    state = setItemCategory(state, 'i_1', 'c_drinks');
+
+    expect(items(state).find((item) => item.id === 'i_1').categoryId).toBe('c_drinks');
+    expect(groupNames(state)).toEqual([
+      ['Nabiał', 'mleko'],
+      ['Napoje', 'woda', 'ser'],
+    ]);
+  });
+
+  it('remembers the choice for the name without quantity', () => {
+    const state = setItemCategory(stateWith('Mleko owsiane 1 l'), 'i_1', 'c_drinks');
+    expect(state.categoryMemory).toEqual({ 'mleko owsiane': 'c_drinks' });
+  });
+
+  it('remembers "Bez kategorii" as null', () => {
+    const state = setItemCategory(stateWith('mleko'), 'i_1', null);
+    expect(items(state)[0].categoryId).toBeNull();
+    expect(state.categoryMemory).toEqual({ mleko: null });
+  });
+
+  it('applies the remembered choice to the same product added later', () => {
+    let state = setItemCategory(stateWith('mleko owsiane'), 'i_1', 'c_drinks');
+    state = removeItem(state, 'i_1');
+    state = addItem(state, 'Mleko owsiane 2 l', { id: 'i_9', now: 9000 }).state;
+    expect(items(state)[0].categoryId).toBe('c_drinks');
+  });
+
+  it('returns the same state for an unknown item or category, or the same category', () => {
+    const before = stateWith('mleko');
+    expect(setItemCategory(before, 'i_404', 'c_drinks')).toBe(before);
+    expect(setItemCategory(before, 'i_1', 'c_404')).toBe(before);
+    expect(setItemCategory(before, 'i_1', 'c_dairy')).toBe(before);
+  });
+
+  it('does not mutate the previous state', () => {
+    const before = stateWith('mleko', 'chleb');
+    const snapshot = structuredClone(before);
+    setItemCategory(before, 'i_1', 'c_drinks');
+    expect(before).toEqual(snapshot);
+  });
+});
+
+describe('getSections groups', () => {
+  it('groups "to buy" items in the order of categories, "Bez kategorii" last', () => {
+    const state = stateWith('baterie', 'mleko', 'chleb', 'ser', 'jabłka');
+    expect(groupNames(state)).toEqual([
+      ['Warzywa i owoce', 'jabłka'],
+      ['Pieczywo', 'chleb'],
+      ['Nabiał', 'mleko', 'ser'],
+      [null, 'baterie'],
+    ]);
+  });
+
+  it('follows a custom order of categories', () => {
+    const state = stateWith('mleko', 'chleb');
+    const reversed = { ...state, categories: [...state.categories].reverse() };
+    expect(groupNames(reversed)).toEqual([
+      ['Nabiał', 'mleko'],
+      ['Pieczywo', 'chleb'],
+    ]);
+  });
+
+  it('keeps the manual order inside a group', () => {
+    const state = moveItem(stateWith('mleko', 'ser', 'jogurt'), 'i_3', 0);
+    expect(groupNames(state)).toEqual([['Nabiał', 'jogurt', 'mleko', 'ser']]);
+  });
+
+  it('leaves bought items out of the groups', () => {
+    const state = toggleItem(stateWith('mleko', 'ser'), 'i_1', 9000);
+    expect(groupNames(state)).toEqual([['Nabiał', 'ser']]);
+    expect(names(sections(state).bought)).toEqual(['mleko']);
+  });
+
+  it('puts items of a deleted category into "Bez kategorii"', () => {
+    const state = stateWith('mleko', 'chleb');
+    const withoutDairy = {
+      ...state,
+      categories: state.categories.filter((category) => category.id !== 'c_dairy'),
+    };
+    expect(groupNames(withoutDairy)).toEqual([
+      ['Pieczywo', 'chleb'],
+      [null, 'mleko'],
+    ]);
+  });
+
+  it('returns no groups for an empty list', () => {
+    expect(sections(stateWith()).groups).toEqual([]);
   });
 });

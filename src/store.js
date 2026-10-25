@@ -181,7 +181,7 @@ export function addItem(state, rawName, { id, now }) {
     checked: false,
     createdAt: now,
     checkedAt: null,
-    categoryId: null,
+    categoryId: findCategoryId(name, state.categories, state.categoryMemory),
   };
   const newState = updateActiveItems(state, (items) => [...items, item]);
   return { state: newState, status: 'added', itemId: id };
@@ -212,6 +212,30 @@ export function renameItem(state, itemId, rawName) {
   }
 
   return { state: updateItem(state, itemId, { name }), status: 'renamed' };
+}
+
+// Puts an item into another category (categoryId, or null for "Bez kategorii")
+// and remembers the choice for its name without quantity, so next time the
+// same product lands there by itself (spec 10.2, 10.4).
+// Returns the same state for an unknown item or category, or the same category.
+export function setItemCategory(state, itemId, categoryId) {
+  const items = getActiveList(state).items;
+  const item = items.find((i) => i.id === itemId);
+  const categoryExists = state.categories.some((category) => category.id === categoryId);
+  if (!item || (categoryId !== null && !categoryExists)) return state;
+  if (item.categoryId === categoryId) return state;
+
+  // The item goes to the end of the array, which shows it at the bottom of its
+  // new group. Left in place, it could appear anywhere in that group.
+  const moved = { ...item, categoryId };
+  const newState = updateActiveItems(state, () => [
+    ...items.filter((i) => i.id !== itemId),
+    moved,
+  ]);
+  return {
+    ...newState,
+    categoryMemory: { ...state.categoryMemory, [duplicateKey(item.name)]: categoryId },
+  };
 }
 
 export function removeItem(state, itemId) {
@@ -247,16 +271,32 @@ export function moveItem(state, itemId, toIndex) {
   );
 }
 
-// Splits items into the two sections shown on screen:
-// "to buy" in the order of the items array: the order they were added
-// (newest last), unless the user moved them (spec 9.2);
-// "bought" with the most recently checked first.
-export function getSections(list) {
+// Splits items into what is shown on screen:
+// toBuy  – all "to buy" items in the order of the items array: the order they
+//          were added (newest last), unless the user moved them (spec 9.2);
+// groups – the same items split by category (spec 10.3), as
+//          [{ category: { id, name } or null for "Bez kategorii", items }],
+//          in the order of categories, "Bez kategorii" last, no empty groups;
+// bought – the most recently checked first, not grouped.
+export function getSections(list, categories) {
   const toBuy = list.items.filter((item) => !item.checked);
   const bought = list.items
     .filter((item) => item.checked)
     .sort((a, b) => b.checkedAt - a.checkedAt);
-  return { toBuy, bought };
+  return { toBuy, groups: groupByCategory(toBuy, categories), bought };
+}
+
+function groupByCategory(items, categories) {
+  const groups = categories.map((category) => ({
+    category,
+    items: items.filter((item) => item.categoryId === category.id),
+  }));
+  // Also catches ids of deleted categories, which count as no category (spec 10.6).
+  const uncategorized = items.filter(
+    (item) => !categories.some((category) => category.id === item.categoryId),
+  );
+  groups.push({ category: null, items: uncategorized });
+  return groups.filter((group) => group.items.length > 0);
 }
 
 export function getProgress(list) {

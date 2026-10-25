@@ -207,7 +207,7 @@ function startEditing(nameButton, itemId, onRename) {
 
 function render(elements, state) {
   const list = getActiveList(state);
-  const { toBuy, bought } = getSections(list);
+  const { toBuy, bought } = getSections(list, state.categories);
   const { checked, total } = getProgress(list);
 
   elements.emptyState.hidden = total > 0;
