@@ -32,12 +32,14 @@ export default defineConfig({
         display: 'standalone',
         start_url: '/sprawunki/',
         scope: '/sprawunki/',
-        // The splash screen Android shows at start (spec 12.4): white like the icon's
-        // background, so the icon and the white frame Chrome draws around it blend into
-        // the screen, in both themes. The status bar matches it during the splash; after
-        // the start it takes the theme's color from the theme-color tags in index.html (spec 12.2).
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
+        // The background of the app's window (spec 12.4): the splash screen at start and the
+        // strip under Android's navigation bar. Dark, like the dark theme (--color-bg), which
+        // keeps the navigation bar dark and the name on the splash screen readable. One color
+        // for both themes: the manifest can't follow the theme. The status bar matches it
+        // during the splash; after the start it takes the theme's color from the theme-color
+        // tags in index.html (spec 12.2).
+        theme_color: '#111318',
+        background_color: '#111318',
         // Paths are relative to the manifest file, which lives in /sprawunki/.
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

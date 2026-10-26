@@ -2,7 +2,8 @@
   Source of the app icon: a shopping bag on the move, flat, in the accent color
   of the app (the accent color in styles.css, light theme) on white. White,
   because Chrome on Android puts a white frame around the icon on the splash
-  screen; on a white background that frame can't be seen (spec 12.4).
+  screen; with a white background the frame and the icon form one white tile
+  (spec 12.4).
   The PNG files in public/ are generated from it: npm run icons.
   Drawn on a 512 × 512 square without transparency; the art stays inside the
   central circle (80% of the size), so Android can crop it to any shape.
