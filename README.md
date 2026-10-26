@@ -75,6 +75,8 @@ src/
   drag.js          # zmiana kolejności przeciąganiem (Pointer Events)
   wake-lock.js     # blokada wygaszania ekranu (Screen Wake Lock API)
   product-dictionary.js  # słownik produkt → kategoria (same dane)
+  settings-dialog.js     # okno „Ustawienia”: motyw i informacje o aplikacji
+  theme.js         # stosowanie motywu (jasny, ciemny, automatyczny)
   styles.css
 public/            # favicon i ikony aplikacji (generowane, nie edytować ręcznie)
 design/icon.svg    # źródło ikony

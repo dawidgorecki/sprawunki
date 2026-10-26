@@ -47,6 +47,8 @@ src/
   drag.js        # zmiana kolejności przeciąganiem (wersja 1.1)
   wake-lock.js   # blokada wygaszania ekranu (wersja 1.1)
   product-dictionary.js  # słownik produkt → kategoria domyślna (wersja 2.0, same dane)
+  settings-dialog.js    # okno „Ustawienia”: motyw, o aplikacji (wersja 2.2)
+  theme.js       # stosowanie motywu: atrybut na <html>, theme-color (wersja 2.2)
   styles.css
 public/
   icons/         # ikony PWA (generowane z design/icon.svg, nie edytować ręcznie)

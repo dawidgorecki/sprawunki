@@ -357,7 +357,7 @@ Okno „Ustawienia” z wyborem motywu i informacjami o aplikacji oraz ładniejs
 
 ### 12.3 O aplikacji
 
-- Sekcja w oknie „Ustawienia”: nazwa „Sprawunki”, „Wersja 2.2.0”, „Autor: Dawid Górecki”.
+- Sekcja w oknie „Ustawienia”: nazwa „Sprawunki”, „Wersja 2.2.0”, „Autor: Dawid Górecki”, „Licencja: Apache 2.0” (plik `LICENSE`) i „Stworzone z pomocą AI: Claude (Anthropic)”, żeby było jasne, że aplikacja powstała z pomocą AI.
 - Numer wersji pochodzi z `package.json` i jest wstawiany do kodu przy budowaniu, więc zmienia się go w jednym miejscu.
 - Pokazana wersja to wersja kodu, który właśnie działa. Po aktualizacji w tle nowa wersja działa od kolejnego uruchomienia (3.9), więc numer pozwala sprawdzić, czy aktualizacja już weszła.
 

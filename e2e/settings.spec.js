@@ -106,7 +106,7 @@ test('the theme does not touch the list data', async ({ page }) => {
   expect(await page.evaluate(() => localStorage.getItem('sprawunki'))).toBe(before);
 });
 
-test('"O aplikacji" shows the name, the version from package.json and the author', async ({ page }) => {
+test('"O aplikacji" shows the name, version, author, license and AI help', async ({ page }) => {
   const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
   await openDialog(page);
 
@@ -114,6 +114,8 @@ test('"O aplikacji" shows the name, the version from package.json and the author
   await expect(about).toContainText('Sprawunki');
   await expect(about).toContainText(`Wersja ${version}`);
   await expect(about).toContainText('Autor: Dawid Górecki');
+  await expect(about).toContainText('Licencja: Apache 2.0');
+  await expect(about).toContainText('Stworzone z pomocą AI: Claude (Anthropic)');
 });
 
 // Spec 12.1: on a narrow phone the header with four buttons stays on one line.
