@@ -21,7 +21,8 @@ import {
   moveList,
   setActiveList,
 } from './store.js';
-import { loadState, saveState } from './storage.js';
+import { loadState, saveState, loadTheme } from './storage.js';
+import { applyTheme } from './theme.js';
 import { createUI } from './ui.js';
 import { isWakeLockSupported, createWakeLock } from './wake-lock.js';
 
@@ -56,6 +57,9 @@ const wakeLock = isWakeLockSupported()
   : null;
 
 const storage = getStorage();
+// The page colors are already set by the script in index.html; this also sets
+// the browser UI color to match.
+applyTheme(loadTheme(storage));
 const loaded = loadState(storage, { now: Date.now(), listId: createId('l_') });
 let state = loaded.state;
 

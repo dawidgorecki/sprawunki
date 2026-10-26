@@ -3,40 +3,35 @@
 /* ---------- Colors ---------- */
 
 :root {
-  /* Tells the browser both themes are supported, so native controls and scrollbars match. */
+  /* Tells the browser both themes are supported, so native controls and scrollbars match.
+     "light dark" = follow the system ("Automatyczny"); the rules below force one theme. */
   color-scheme: light dark;
 
-  --color-bg: #f4f6f9;
-  --color-surface: #ffffff;
-  --color-text: #1b1d21;
-  --color-muted: #646b75;
-  --color-border: #d9dee5;
-  --color-border-strong: #87909c;
-  --color-accent: #2f6f9e;
-  --color-on-accent: #ffffff;
-  --color-highlight: #ffe98a;
-  --color-quantity-bg: #e1edf6;
-  --color-quantity-text: #24577d;
-  --color-message-bg: #1b1d21;
-  --color-message-text: #ffffff;
+  /* light-dark(light value, dark value) picks a color by the color-scheme in effect,
+     so every color is defined once for both themes. */
+  --color-bg: light-dark(#f4f6f9, #111318);
+  --color-surface: light-dark(#ffffff, #1b1f26);
+  --color-text: light-dark(#1b1d21, #e6e9ef);
+  --color-muted: light-dark(#646b75, #9aa3ae);
+  --color-border: light-dark(#d9dee5, #323842);
+  --color-border-strong: light-dark(#87909c, #78818d);
+  --color-accent: light-dark(#2f6f9e, #73b1d8);
+  --color-on-accent: light-dark(#ffffff, #0d1622);
+  --color-highlight: light-dark(#ffe98a, #5e5418);
+  --color-quantity-bg: light-dark(#e1edf6, #22384a);
+  --color-quantity-text: light-dark(#24577d, #b4d6ec);
+  --color-message-bg: light-dark(#1b1d21, #e6e9ef);
+  --color-message-text: light-dark(#ffffff, #1b1d21);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #111318;
-    --color-surface: #1b1f26;
-    --color-text: #e6e9ef;
-    --color-muted: #9aa3ae;
-    --color-border: #323842;
-    --color-border-strong: #78818d;
-    --color-accent: #73b1d8;
-    --color-on-accent: #0d1622;
-    --color-highlight: #5e5418;
-    --color-quantity-bg: #22384a;
-    --color-quantity-text: #b4d6ec;
-    --color-message-bg: #e6e9ef;
-    --color-message-text: #1b1d21;
-  }
+/* Set on <html> by the script in index.html and by theme.js (spec 12.2).
+   No attribute means "Automatyczny". */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 /* ---------- Page layout ---------- */

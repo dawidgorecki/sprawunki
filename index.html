@@ -12,9 +12,28 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
     />
     <title>Sprawunki</title>
-    <!-- Browser UI color (e.g. Android status bar), matching --color-bg in both themes. -->
+    <!--
+      Browser UI color (e.g. Android status bar), matching --color-bg in both themes.
+      theme.js changes them when the user picks "Jasny" or "Ciemny" (spec 12.2).
+    -->
     <meta name="theme-color" content="#f4f6f9" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#111318" media="(prefers-color-scheme: dark)" />
+    <!--
+      Applies the saved theme before the page is drawn, so a dark theme does not flash
+      white at start (spec 12.2). A plain inline script runs right here and blocks drawing;
+      main.js, a module, runs only after the whole page is parsed, which is too late.
+      Kept tiny on purpose: the key and values must match THEME_KEY in storage.js.
+    -->
+    <script>
+      try {
+        const theme = localStorage.getItem('sprawunki-theme');
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.dataset.theme = theme;
+        }
+      } catch {
+        // Storage blocked: stay with the system theme.
+      }
+    </script>
     <!-- Paths starting with / get the /sprawunki/ base added by Vite. -->
     <link rel="icon" href="/favicon.png" type="image/png" />
     <!-- iOS ignores manifest icons and uses this one for "Add to Home Screen". -->
