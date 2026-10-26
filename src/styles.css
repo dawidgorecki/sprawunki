@@ -655,8 +655,9 @@ li.highlight {
   border: none;
 }
 
-/* Looks like the h2 section headings of the main screen. */
-.segmented legend {
+/* Section headings of the dialog look like the h2 headings of the main screen. */
+.segmented legend,
+.settings-about h3 {
   margin: 0 0 0.5rem 0.25rem;
   padding: 0;
   font-size: 0.875rem;
@@ -701,6 +702,32 @@ li.highlight {
 .segmented input:focus-visible + label {
   outline: 3px solid var(--color-text);
   outline-offset: -5px;
+}
+
+/* The dialog has no bottom padding (see .app-dialog), so the last section keeps
+   its distance from the edge here. */
+.settings-about {
+  margin-bottom: 1rem;
+}
+
+/* A card like the lists of the main screen. */
+.about-card {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+.about-card p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.about-card .about-name {
+  margin-bottom: 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
 }
 
 /* ---------- List picker (spec 11.2) ---------- */

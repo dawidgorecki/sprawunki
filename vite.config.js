@@ -1,9 +1,18 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+
+// The version is set in one place, package.json, and shown in the settings (spec 12.3).
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
 export default defineConfig({
   // GitHub Pages serves the app from https://<login>.github.io/sprawunki/
   base: '/sprawunki/',
+  // Vite replaces __APP_VERSION__ in the code with this text, both in `npm run dev`
+  // and in the build. JSON.stringify adds the quotes, so the code gets '2.2.0'.
+  define: {
+    __APP_VERSION__: JSON.stringify(version),
+  },
   plugins: [
     VitePWA({
       // The new service worker activates as soon as it is installed, without asking.

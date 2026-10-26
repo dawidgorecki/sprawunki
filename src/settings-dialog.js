@@ -1,5 +1,6 @@
-// The "Ustawienia" dialog (spec 12): the theme switch. Like ui.js it only shows
-// what it is given and reports the user's choice through a handler.
+// The "Ustawienia" dialog (spec 12): the theme switch and the app version.
+// Like ui.js it only shows what it is given and reports the user's choice
+// through a handler.
 
 // onChangeTheme(theme) runs with 'light', 'dark' or 'auto' as soon as the user
 // picks an option; the dialog stays open (spec 12.2).
@@ -9,6 +10,11 @@ export function createSettingsDialog(onChangeTheme) {
 
   document.getElementById('open-settings').addEventListener('click', () => dialog.showModal());
   dialog.querySelector('.dialog-close').addEventListener('click', () => dialog.close());
+
+  // __APP_VERSION__ is not a variable: Vite puts the version from package.json
+  // here when it serves or builds the code (see vite.config.js). So the number
+  // shown is the one of the code that is running (spec 12.3).
+  document.getElementById('app-version').textContent = `Wersja ${__APP_VERSION__}`;
 
   // 'change' fires for clicks, taps and the arrow keys alike.
   themeOptions.addEventListener('change', (event) => onChangeTheme(event.target.value));

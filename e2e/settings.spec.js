@@ -1,6 +1,8 @@
-// The "Ustawienia" dialog (spec 12.1) and the theme switch in it (spec 12.2).
+// The "Ustawienia" dialog (spec 12.1), the theme switch in it (spec 12.2)
+// and the "O aplikacji" section (spec 12.3).
 // How each theme looks at start is checked in theme.spec.js.
 
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { openApp, addItems } from './helpers.js';
 
@@ -102,6 +104,16 @@ test('the theme does not touch the list data', async ({ page }) => {
   await themeGroup(page).getByText('Ciemny').click();
 
   expect(await page.evaluate(() => localStorage.getItem('sprawunki'))).toBe(before);
+});
+
+test('"O aplikacji" shows the name, the version from package.json and the author', async ({ page }) => {
+  const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  await openDialog(page);
+
+  const about = dialog(page).getByRole('region', { name: 'O aplikacji' });
+  await expect(about).toContainText('Sprawunki');
+  await expect(about).toContainText(`Wersja ${version}`);
+  await expect(about).toContainText('Autor: Dawid Górecki');
 });
 
 // Spec 12.1: on a narrow phone the header with four buttons stays on one line.
