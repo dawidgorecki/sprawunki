@@ -1,87 +1,39 @@
 <!--
-  Source of the app icon: a shopping bag on the move, with a check mark.
+  Source of the app icon: a white shopping bag on the move, flat, on the accent
+  color of the app (the accent color in styles.css, light theme).
   The PNG files in public/ are generated from it: npm run icons.
   Drawn on a 512 × 512 square without transparency; the art stays inside the
-  central circle (about 80% of the size), so Android can crop it to any shape.
+  central circle (80% of the size), so Android can crop it to any shape.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <!-- Light blue at the top left to the dark blue used for the splash screen (#22587f). -->
-    <linearGradient id="background" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="270" y2="455">
-      <stop offset="0" stop-color="#74a8cd" />
-      <stop offset="0.45" stop-color="#4c84ad" />
-      <stop offset="1" stop-color="#22587f" />
-    </linearGradient>
-    <radialGradient id="glow" cx="140" cy="80" r="260" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.12" />
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0" />
-    </radialGradient>
-    <!-- The right side of the bag, turned away from the light. -->
-    <linearGradient id="side" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#eef4f8" stop-opacity="0" />
-      <stop offset="0.35" stop-color="#e3ecf2" />
-      <stop offset="1" stop-color="#c6d8e5" />
-    </linearGradient>
-    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fbfdfe" />
-      <stop offset="1" stop-color="#eaf1f7" />
-    </linearGradient>
-    <linearGradient id="handle" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#ffffff" />
-      <stop offset="1" stop-color="#d4e5f0" />
-    </linearGradient>
-    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="6" dy="18" stdDeviation="14" flood-color="#0b2a44" flood-opacity="0.45" />
-    </filter>
-  </defs>
+  <rect width="512" height="512" fill="#2f6f9e" />
 
-  <rect width="512" height="512" fill="url(#background)" />
-  <rect width="512" height="512" fill="url(#glow)" />
+  <!-- The bag with its speed lines, moved and scaled to sit in the middle. -->
+  <g transform="translate(256 256) scale(0.98) translate(-236 -270)">
+    <!-- Speed lines, fading towards the bottom. -->
+    <g stroke="#ffffff" stroke-width="12" stroke-linecap="round">
+      <path d="M104 268 L157 271" />
+      <path d="M85 315 L146 317" stroke-opacity="0.75" />
+      <path d="M108 360 L128 360" stroke-opacity="0.5" />
+    </g>
 
-  <!-- Speed lines, fading towards the bottom. -->
-  <g stroke="#ffffff" stroke-width="12" stroke-linecap="round">
-    <path d="M104 268 L157 271" stroke-opacity="0.92" />
-    <path d="M85 315 L146 317" stroke-opacity="0.72" />
-    <path d="M108 360 L128 360" stroke-opacity="0.55" />
-  </g>
-
-  <!-- Check mark. -->
-  <path
-    d="M353 129 L373 147 L409 113"
-    fill="none"
-    stroke="#ffffff"
-    stroke-width="13"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-
-  <g filter="url(#shadow)">
-    <!-- Handle. -->
     <path
       d="M234 204 L236 182 C239 150 262 136 286 138 C311 140 330 158 328 190 L327 214"
       fill="none"
-      stroke="url(#handle)"
+      stroke="#ffffff"
       stroke-width="22"
       stroke-linecap="round"
     />
     <!-- Body: a wide round stroke in the same color rounds the corners. -->
     <path
       d="M188 197 L349 233 L341 401 L138 372 Z"
-      fill="url(#body)"
-      stroke="url(#body)"
+      fill="#ffffff"
+      stroke="#ffffff"
       stroke-width="22"
       stroke-linejoin="round"
     />
+    <!-- Holes for the handle, in the background color. -->
+    <circle cx="216" cy="231" r="11" fill="#2f6f9e" />
+    <circle cx="317" cy="251" r="11" fill="#2f6f9e" />
   </g>
-  <path
-    d="M288 225 L349 239 L341 401 L284 393 Z"
-    fill="url(#side)"
-    stroke="url(#side)"
-    stroke-width="22"
-    stroke-linejoin="round"
-  />
-  <!-- A fold under the top edge. -->
-  <path d="M182 213 L355 251" stroke="#d3dfe8" stroke-width="3" />
-  <circle cx="216" cy="231" r="11" fill="#1c4f75" />
-  <circle cx="317" cy="251" r="11" fill="#1c4f75" />
 </svg>
