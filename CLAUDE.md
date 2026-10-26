@@ -29,6 +29,7 @@ npm run test:e2e   # testy interfejsu (Playwright; sam uruchamia serwer dewelope
 npm run test:e2e:ui  # to samo z oknem pokazującym każdy krok
 npm run build      # build do dist/
 npm run preview    # podgląd builda (tu działa service worker)
+npm run icons      # ikony PNG w public/ z design/icon.svg
 ```
 
 ## Struktura
@@ -48,7 +49,11 @@ src/
   product-dictionary.js  # słownik produkt → kategoria domyślna (wersja 2.0, same dane)
   styles.css
 public/
-  icons/         # ikony PWA
+  icons/         # ikony PWA (generowane z design/icon.svg, nie edytować ręcznie)
+design/
+  icon.svg       # źródło ikony
+scripts/
+  generate-icons.js  # npm run icons: PNG z SVG przez Chromium z Playwrighta
 tests/
   store.test.js
   storage.test.js

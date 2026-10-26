@@ -365,6 +365,7 @@ Okno „Ustawienia” z wyborem motywu i informacjami o aplikacji oraz ładniejs
 
 - Na Androidzie ekran powitalny zainstalowanej aplikacji tworzy przeglądarka z manifestu: kolor tła (`background_color`), ikona i nazwa. Nie da się na nim umieścić innych treści, dlatego wersja i autor są w oknie „Ustawienia” (12.3). Własny ekran startowy w HTML odrzucono, bo wydłużałby każde uruchomienie (punkt 5: start natychmiastowy).
 - Dotąd tło było jasnoszare (`#f4f6f9`, także w trybie ciemnym), a ikona z niebieskim tłem wyglądała na nim jak naklejony kwadrat.
+- Źródłem ikony jest `design/icon.svg`; pliki PNG (ikony PWA, `apple-touch-icon`, favicon) generuje z niego `npm run icons`, bez dodatkowych bibliotek (Chromium z Playwrighta). Zmiana ikony = zmiana SVG i ponowne wygenerowanie PNG.
 - Zmiana: `background_color` w manifeście ma kolor tła ikony (ciemniejszy niebieski z jej gradientu), więc ikona zlewa się z tłem i cały ekran jest niebieski z białą torbą, w trybie jasnym i ciemnym. `theme_color` manifestu dostaje ten sam kolor, żeby pasek stanu podczas powitania pasował do tła; po starcie pasek przejmuje kolor motywu (12.2).
 - Chrome aktualizuje manifest zainstalowanej aplikacji z opóźnieniem (sprawdza go nie częściej niż raz na dobę), więc nowy ekran powitalny może pojawić się dopiero po kilku uruchomieniach lub dniach. Nie da się tego przyspieszyć z poziomu aplikacji.
 - iOS: bez zmian. Ekrany powitalne iOS (`apple-touch-startup-image`) wymagają osobnego obrazka dla każdego rozmiaru ekranu, co jest poza zakresem.

@@ -53,6 +53,7 @@ npm run test:e2e   # testy interfejsu w przeglądarce (Playwright)
 npm run test:e2e:ui  # to samo z podglądem każdego kroku
 npm run build      # build do dist/
 npm run preview    # podgląd builda (tu działa service worker i tryb offline)
+npm run icons      # ikony PNG w public/ wygenerowane z design/icon.svg
 ```
 
 Testy interfejsu klikają w prawdziwą aplikację w Chromium, na komputerze i na emulowanym telefonie z ekranem dotykowym. Przed pierwszym uruchomieniem pobierz przeglądarkę: `npx playwright install chromium`. W WSL lub na świeżym Linuksie potrzebne są też biblioteki systemowe: `sudo env "PATH=$PATH" npx playwright install-deps chromium`. Testy interfejsu działają tylko lokalnie, nie w GitHub Actions.
@@ -75,7 +76,9 @@ src/
   wake-lock.js     # blokada wygaszania ekranu (Screen Wake Lock API)
   product-dictionary.js  # słownik produkt → kategoria (same dane)
   styles.css
-public/            # favicon i ikony aplikacji
+public/            # favicon i ikony aplikacji (generowane, nie edytować ręcznie)
+design/icon.svg    # źródło ikony
+scripts/           # generate-icons.js: PNG z SVG (npm run icons)
 tests/             # testy logiki: store.js i storage.js (Vitest)
 e2e/               # testy interfejsu (Playwright)
 docs/screenshots/  # zrzuty ekranu do tego pliku
