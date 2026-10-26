@@ -24,18 +24,18 @@ Sprawunki to prosta aplikacja webowa (PWA) do prowadzenia listy zakupów: w cią
 - Edycja nazwy po tapnięciu, usuwanie jednym przyciskiem i „Wyczyść kupione”.
 - „Cofnij” po usunięciu produktu lub wyczyszczeniu kupionych.
 - Działanie offline po pierwszym uruchomieniu.
-- Tryb jasny i ciemny zgodnie z ustawieniami telefonu, w stonowanej niebieskiej kolorystyce.
+- Motyw jasny, ciemny albo automatyczny (zgodnie z ustawieniami telefonu), w stonowanej niebieskiej kolorystyce. Wybierasz go w oknie „Ustawienia” (koło zębate w nagłówku), gdzie jest też numer wersji, po którym sprawdzisz, czy aktualizacja już weszła.
 
 ## Instalacja na telefonie
 
 - **Android (Chrome):** otwórz link powyżej, a potem ⋮ → „Zainstaluj aplikację”.
 - **iOS (Safari 16.4+):** otwórz link, potem „Udostępnij” → „Dodaj do ekranu początkowego”.
 
-Aktualizacje instalują się same: nowa wersja pobiera się w tle i działa od kolejnego uruchomienia.
+Aktualizacje instalują się same: nowa wersja pobiera się w tle i działa od kolejnego uruchomienia. Działającą wersję pokazuje okno „Ustawienia”. Ikona i ekran powitalny zainstalowanej aplikacji mogą się zmienić dopiero po kilku uruchomieniach, bo Chrome odświeża je z opóźnieniem.
 
 ## Prywatność
 
-Aplikacja nie ma serwera ani kont. Listy są zapisane tylko w pamięci przeglądarki na Twoim urządzeniu (localStorage) i nigdzie nie jest wysyłana. Aplikacja nie korzysta z żadnych zewnętrznych usług ani analityki.
+Aplikacja nie ma serwera ani kont. Listy i wybrany motyw są zapisane tylko w pamięci przeglądarki na Twoim urządzeniu (localStorage) i nigdzie nie są wysyłane. Aplikacja nie korzysta z żadnych zewnętrznych usług ani analityki.
 
 Wyczyszczenie danych przeglądarki lub odinstalowanie aplikacji usuwa listy.
 
@@ -87,6 +87,8 @@ docs/screenshots/  # zrzuty ekranu do tego pliku
 ```
 
 Pełna specyfikacja: [SPEC.md](SPEC.md), plan prac: [PLAN.md](PLAN.md).
+
+Aplikacja powstała z pomocą AI: kod pisany we współpracy z Claude (Anthropic) w Claude Code, małymi krokami według planu, z testami i ręcznym sprawdzeniem każdego kroku.
 
 ## Licencja
 
