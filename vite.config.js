@@ -32,9 +32,12 @@ export default defineConfig({
         display: 'standalone',
         start_url: '/sprawunki/',
         scope: '/sprawunki/',
-        // Same as the page background (--color-bg), so the status bar blends in.
-        theme_color: '#f4f6f9',
-        background_color: '#f4f6f9',
+        // The splash screen Android shows at start (spec 12.4): the darker blue of the
+        // icon's background (last stop in design/icon.svg), so the icon blends into a fully blue screen
+        // in both themes. The status bar matches it during the splash; after the start
+        // it takes the theme's color from the theme-color tags in index.html (spec 12.2).
+        theme_color: '#22587f',
+        background_color: '#22587f',
         // Paths are relative to the manifest file, which lives in /sprawunki/.
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
