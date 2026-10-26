@@ -25,9 +25,12 @@
 }
 
 /* Set on <html> by the script in index.html and by theme.js (spec 12.2).
-   No attribute means "Automatyczny". */
+   No attribute means "Automatyczny".
+   "only": Chrome on Android can darken light pages by itself (the "dark theme
+   for sites" setting), which made "Jasny" look dark. "only light" tells it
+   this page must stay light. */
 :root[data-theme='light'] {
-  color-scheme: light;
+  color-scheme: only light;
 }
 
 :root[data-theme='dark'] {
