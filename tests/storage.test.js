@@ -1,8 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { STORAGE_KEY, migrate, loadState, saveState } from '../src/storage.js';
+import {
+  STORAGE_KEY,
+  THEME_KEY,
+  migrate,
+  loadState,
+  saveState,
+  loadTheme,
+  saveTheme,
+} from '../src/storage.js';
 import { createInitialState, addItem, addList, setActiveList, DEFAULT_CATEGORIES } from '../src/store.js';
 
-// Minimal stand-in for localStorage: only the two methods storage.js uses.
+// Minimal stand-in for localStorage: only the methods storage.js uses.
 function createFakeStorage(initial = {}) {
   const data = { ...initial };
   return {
@@ -10,6 +18,9 @@ function createFakeStorage(initial = {}) {
     getItem: (key) => (key in data ? data[key] : null),
     setItem: (key, value) => {
       data[key] = String(value);
+    },
+    removeItem: (key) => {
+      delete data[key];
     },
   };
 }
@@ -22,6 +33,9 @@ function createBrokenStorage() {
     },
     setItem: () => {
       throw new Error('QuotaExceededError');
+    },
+    removeItem: () => {
+      throw new Error('SecurityError');
     },
   };
 }
@@ -211,5 +225,57 @@ describe('saveState', () => {
 
   it('returns false instead of crashing when the browser refuses to save', () => {
     expect(saveState(createBrokenStorage(), sampleState())).toBe(false);
+  });
+});
+
+describe('loadTheme', () => {
+  it('returns auto when nothing was saved (existing users)', () => {
+    expect(loadTheme(createFakeStorage())).toBe('auto');
+  });
+
+  it('returns a saved light or dark theme', () => {
+    expect(loadTheme(createFakeStorage({ [THEME_KEY]: 'light' }))).toBe('light');
+    expect(loadTheme(createFakeStorage({ [THEME_KEY]: 'dark' }))).toBe('dark');
+  });
+
+  it('treats an unknown value as auto', () => {
+    expect(loadTheme(createFakeStorage({ [THEME_KEY]: 'purple' }))).toBe('auto');
+    expect(loadTheme(createFakeStorage({ [THEME_KEY]: 'auto' }))).toBe('auto');
+  });
+
+  it('returns auto when storage is blocked', () => {
+    expect(loadTheme(createBrokenStorage())).toBe('auto');
+  });
+});
+
+describe('saveTheme', () => {
+  it('saves light and dark under the theme key', () => {
+    const storage = createFakeStorage();
+
+    expect(saveTheme(storage, 'dark')).toBe(true);
+    expect(storage.data[THEME_KEY]).toBe('dark');
+    expect(saveTheme(storage, 'light')).toBe(true);
+    expect(storage.data[THEME_KEY]).toBe('light');
+  });
+
+  it('removes the key for auto', () => {
+    const storage = createFakeStorage({ [THEME_KEY]: 'dark' });
+
+    expect(saveTheme(storage, 'auto')).toBe(true);
+    expect(THEME_KEY in storage.data).toBe(false);
+  });
+
+  it('leaves the list data untouched', () => {
+    const saved = JSON.stringify(sampleState());
+    const storage = createFakeStorage({ [STORAGE_KEY]: saved });
+
+    saveTheme(storage, 'dark');
+
+    expect(storage.data[STORAGE_KEY]).toBe(saved);
+  });
+
+  it('returns false instead of crashing when the browser refuses to save', () => {
+    expect(saveTheme(createBrokenStorage(), 'dark')).toBe(false);
+    expect(saveTheme(createBrokenStorage(), 'auto')).toBe(false);
   });
 });

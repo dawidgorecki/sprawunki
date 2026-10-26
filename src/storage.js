@@ -134,3 +134,34 @@ export function saveState(storage, state) {
     return false;
   }
 }
+
+// The theme is a device setting, not list data, so it lives under its own key
+// and has no data version (spec 12.5). No key means "auto": follow the system.
+export const THEME_KEY = 'sprawunki-theme';
+const SAVED_THEMES = ['light', 'dark'];
+
+// Returns 'light', 'dark' or 'auto'. An unknown value or blocked storage
+// falls back to 'auto' without a message: it only affects the looks.
+export function loadTheme(storage) {
+  try {
+    const theme = storage.getItem(THEME_KEY);
+    return SAVED_THEMES.includes(theme) ? theme : 'auto';
+  } catch {
+    return 'auto';
+  }
+}
+
+// Returns true when saved, false when the browser refused. The caller still
+// applies the theme, so it works until the app is closed.
+export function saveTheme(storage, theme) {
+  try {
+    if (SAVED_THEMES.includes(theme)) {
+      storage.setItem(THEME_KEY, theme);
+    } else {
+      storage.removeItem(THEME_KEY);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
