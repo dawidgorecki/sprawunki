@@ -1,17 +1,19 @@
 <!--
-  Source of the app icon: a white shopping bag on the move, flat, on the accent
-  color of the app (the accent color in styles.css, light theme).
+  Source of the app icon: a shopping bag on the move, flat, in the accent color
+  of the app (the accent color in styles.css, light theme) on white. White,
+  because Chrome on Android puts a white frame around the icon on the splash
+  screen; on a white background that frame can't be seen (spec 12.4).
   The PNG files in public/ are generated from it: npm run icons.
   Drawn on a 512 × 512 square without transparency; the art stays inside the
   central circle (80% of the size), so Android can crop it to any shape.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" fill="#2f6f9e" />
+  <rect width="512" height="512" fill="#ffffff" />
 
   <!-- The bag with its speed lines, moved and scaled to sit in the middle. -->
   <g transform="translate(256 256) scale(0.98) translate(-236 -270)">
     <!-- Speed lines, fading towards the bottom. -->
-    <g stroke="#ffffff" stroke-width="12" stroke-linecap="round">
+    <g stroke="#2f6f9e" stroke-width="12" stroke-linecap="round">
       <path d="M104 268 L157 271" />
       <path d="M85 315 L146 317" stroke-opacity="0.75" />
       <path d="M108 360 L128 360" stroke-opacity="0.5" />
@@ -20,20 +22,20 @@
     <path
       d="M234 204 L236 182 C239 150 262 136 286 138 C311 140 330 158 328 190 L327 214"
       fill="none"
-      stroke="#ffffff"
+      stroke="#2f6f9e"
       stroke-width="22"
       stroke-linecap="round"
     />
     <!-- Body: a wide round stroke in the same color rounds the corners. -->
     <path
       d="M188 197 L349 233 L341 401 L138 372 Z"
-      fill="#ffffff"
-      stroke="#ffffff"
+      fill="#2f6f9e"
+      stroke="#2f6f9e"
       stroke-width="22"
       stroke-linejoin="round"
     />
     <!-- Holes for the handle, in the background color. -->
-    <circle cx="216" cy="231" r="11" fill="#2f6f9e" />
-    <circle cx="317" cy="251" r="11" fill="#2f6f9e" />
+    <circle cx="216" cy="231" r="11" fill="#ffffff" />
+    <circle cx="317" cy="251" r="11" fill="#ffffff" />
   </g>
 </svg>

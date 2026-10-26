@@ -25,19 +25,19 @@ export default defineConfig({
       // Public files not referenced from the code that must still work offline.
       includeAssets: ['favicon.png', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: 'Sprawunki — lista zakupów',
+        name: 'Sprawunki',
         short_name: 'Sprawunki',
         description: 'Prosta lista zakupów działająca offline.',
         lang: 'pl',
         display: 'standalone',
         start_url: '/sprawunki/',
         scope: '/sprawunki/',
-        // The splash screen Android shows at start (spec 12.4): the icon's flat background
-        // (the accent color, see design/icon.svg), so the icon blends into a fully blue screen
-        // with a white bag, in both themes. The status bar matches it during the splash; after the start
-        // it takes the theme's color from the theme-color tags in index.html (spec 12.2).
-        theme_color: '#2f6f9e',
-        background_color: '#2f6f9e',
+        // The splash screen Android shows at start (spec 12.4): white like the icon's
+        // background, so the icon and the white frame Chrome draws around it blend into
+        // the screen, in both themes. The status bar matches it during the splash; after
+        // the start it takes the theme's color from the theme-color tags in index.html (spec 12.2).
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
         // Paths are relative to the manifest file, which lives in /sprawunki/.
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

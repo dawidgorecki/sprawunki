@@ -77,7 +77,7 @@ Co i jak ma działać w kolejnych wersjach. Kolejność implementacji, kryteria 
 ### 3.9 PWA
 
 - Instalowalna na Androidzie (Chrome) i iOS (Safari, „Dodaj do ekranu początkowego”).
-- Manifest: `name` „Sprawunki — lista zakupów”, `short_name` „Sprawunki”, `display: standalone`, `lang: pl`, kolor motywu, ikony 192×192 i 512×512 (także wariant `maskable`) oraz `apple-touch-icon`.
+- Manifest: `name` i `short_name` „Sprawunki” (od 2.2; wcześniej `name` „Sprawunki — lista zakupów”), `display: standalone`, `lang: pl`, kolor motywu, ikony 192×192 i 512×512 (także wariant `maskable`) oraz `apple-touch-icon`.
 - Tytuł strony (`<title>`) i nagłówek aplikacji: „Sprawunki”.
 - Service worker zapisuje w pamięci podręcznej wszystkie pliki aplikacji; pełne działanie offline.
 - Aktualizacje instalują się automatycznie przy kolejnym uruchomieniu.
@@ -366,8 +366,10 @@ Okno „Ustawienia” z wyborem motywu i informacjami o aplikacji oraz ładniejs
 - Na Androidzie ekran powitalny zainstalowanej aplikacji tworzy przeglądarka z manifestu: kolor tła (`background_color`), ikona i nazwa. Nie da się na nim umieścić innych treści, dlatego wersja i autor są w oknie „Ustawienia” (12.3). Własny ekran startowy w HTML odrzucono, bo wydłużałby każde uruchomienie (punkt 5: start natychmiastowy).
 - Dotąd tło było jasnoszare (`#f4f6f9`, także w trybie ciemnym), a ikona z niebieskim tłem wyglądała na nim jak naklejony kwadrat.
 - Źródłem ikony jest `design/icon.svg`; pliki PNG (ikony PWA, `apple-touch-icon`, favicon) generuje z niego `npm run icons`, bez dodatkowych bibliotek (Chromium z Playwrighta). Zmiana ikony = zmiana SVG i ponowne wygenerowanie PNG.
-- Ikona jest płaska: biała torba w ruchu (z liniami ruchu, bez ptaszka) na jednolitym tle w kolorze akcentu aplikacji (`#2f6f9e`), bez gradientów i cieni. Rysunek mieści się w bezpiecznej strefie ikony maskable (koło 80%), więc Android może wyciąć z niej dowolny kształt.
-- Zmiana: `background_color` w manifeście ma kolor tła ikony (`#2f6f9e`), więc ikona zlewa się z tłem i cały ekran jest niebieski z białą torbą, w trybie jasnym i ciemnym. `theme_color` manifestu dostaje ten sam kolor, żeby pasek stanu podczas powitania pasował do tła; po starcie pasek przejmuje kolor motywu (12.2).
+- Ikona jest płaska: torba w ruchu (z liniami ruchu, bez ptaszka) w kolorze akcentu aplikacji (`#2f6f9e`) na białym tle, bez gradientów i cieni. Rysunek mieści się w bezpiecznej strefie ikony maskable (koło 80%), więc Android może wyciąć z niej dowolny kształt.
+- Chrome na Androidzie (sprawdzone na Samsungu Galaxy) rysuje ikonę na ekranie powitalnym w białej kwadratowej ramce. Dlatego tło ikony i ekranu jest białe: ramka zlewa się z tłem. Wersję z niebieskim tłem odrzucono, bo ramka była na niej wyraźnie widoczna.
+- Zmiana: `background_color` w manifeście jest biały (`#ffffff`), jak tło ikony, więc cały ekran jest biały z niebieską torbą i nazwą „Sprawunki”, w trybie jasnym i ciemnym. Przy ciemnym motywie oznacza to krótki biały ekran przed ciemną aplikacją; manifest ma jeden kolor dla obu motywów, a ekranu powitalnego ani ikony na nim nie da się wyłączyć. `theme_color` manifestu dostaje ten sam kolor, żeby pasek stanu podczas powitania pasował do tła; po starcie pasek przejmuje kolor motywu (12.2).
+- Nazwa na ekranie powitalnym to `name` z manifestu, dlatego od 2.2 jest to samo „Sprawunki”.
 - Chrome aktualizuje manifest zainstalowanej aplikacji z opóźnieniem (sprawdza go nie częściej niż raz na dobę), więc nowy ekran powitalny może pojawić się dopiero po kilku uruchomieniach lub dniach. Nie da się tego przyspieszyć z poziomu aplikacji.
 - iOS: bez zmian. Ekrany powitalne iOS (`apple-touch-startup-image`) wymagają osobnego obrazka dla każdego rozmiaru ekranu, co jest poza zakresem.
 
