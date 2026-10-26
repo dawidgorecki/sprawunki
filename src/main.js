@@ -21,7 +21,7 @@ import {
   moveList,
   setActiveList,
 } from './store.js';
-import { loadState, saveState, loadTheme } from './storage.js';
+import { loadState, saveState, loadTheme, saveTheme } from './storage.js';
 import { applyTheme } from './theme.js';
 import { createUI } from './ui.js';
 import { isWakeLockSupported, createWakeLock } from './wake-lock.js';
@@ -57,9 +57,10 @@ const wakeLock = isWakeLockSupported()
   : null;
 
 const storage = getStorage();
+const theme = loadTheme(storage);
 // The page colors are already set by the script in index.html; this also sets
 // the browser UI color to match.
-applyTheme(loadTheme(storage));
+applyTheme(theme);
 const loaded = loadState(storage, { now: Date.now(), listId: createId('l_') });
 let state = loaded.state;
 
@@ -205,6 +206,14 @@ const ui = createUI({
     }
   },
 
+  // A device setting outside the list state (spec 12.5). If saving fails, the
+  // theme still works until the app is closed; no message, as it is only the
+  // looks, and a blocked storage is already reported by the list (spec 4.2).
+  onChangeTheme(newTheme) {
+    applyTheme(newTheme);
+    saveTheme(storage, newTheme);
+  },
+
   // Not part of the list state: the switch is not saved (spec 9.3).
   async onToggleWakeLock() {
     await wakeLock.setEnabled(!wakeLock.isEnabled());
@@ -235,6 +244,7 @@ function update(newState) {
 }
 
 ui.render(state);
+ui.showTheme(theme);
 if (wakeLock) {
   ui.updateWakeLockButton(false);
 }

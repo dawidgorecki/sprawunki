@@ -126,6 +126,32 @@
           />
         </svg>
       </button>
+      <!-- Opens the settings dialog below (spec 12.1). Last, as it is used the least. -->
+      <button
+        type="button"
+        id="open-settings"
+        class="header-button"
+        aria-label="Ustawienia"
+        title="Ustawienia"
+        aria-haspopup="dialog"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="22"
+          height="22"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
+          />
+        </svg>
+      </button>
     </header>
 
     <main>
@@ -231,6 +257,32 @@
         </div>
       </div>
       <ul id="list-picker-options"></ul>
+    </dialog>
+
+    <!-- Settings (spec 12); wired by settings-dialog.js. -->
+    <dialog id="settings-dialog" class="app-dialog" aria-labelledby="settings-title">
+      <div class="dialog-header">
+        <div class="dialog-title-row">
+          <h2 id="settings-title">Ustawienia</h2>
+          <button type="button" class="dialog-close">Gotowe</button>
+        </div>
+      </div>
+      <!--
+        Radio buttons styled as one switch split in three (spec 12.2). The inputs stay
+        in the page, only hidden from view, so the arrow keys and screen readers work
+        as in any radio group; each <label> is the visible, tappable part.
+      -->
+      <fieldset class="segmented">
+        <legend>Motyw</legend>
+        <div class="segmented-options">
+          <input type="radio" id="theme-light" name="theme" value="light" class="visually-hidden" />
+          <label for="theme-light">Jasny</label>
+          <input type="radio" id="theme-dark" name="theme" value="dark" class="visually-hidden" />
+          <label for="theme-dark">Ciemny</label>
+          <input type="radio" id="theme-auto" name="theme" value="auto" class="visually-hidden" />
+          <label for="theme-auto">Automatyczny</label>
+        </div>
+      </fieldset>
     </dialog>
 
     <!-- Tag icon of the category picker next to every "to buy" item; cloned by ui.js. -->

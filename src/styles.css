@@ -98,6 +98,17 @@ h1 {
   font-size: 1.5rem;
 }
 
+/* With four buttons (spec 12.1) a narrow phone has little room left for the title. */
+@media (max-width: 400px) {
+  header {
+    gap: 0.375rem;
+  }
+
+  h1 {
+    font-size: 1.25rem;
+  }
+}
+
 /* Title with the list name and the progress below it; takes the free space and pushes the
    buttons to the right. */
 .header-title {
@@ -140,8 +151,9 @@ h1 {
   color: var(--color-muted);
 }
 
-/* Round icon buttons on the right: lists (spec 11.3), categories (spec 10.5)
-   and the wake lock switch (spec 9.3), which is outlined when off and filled when on. */
+/* Round icon buttons on the right: lists (spec 11.3), categories (spec 10.5),
+   the wake lock switch (spec 9.3), which is outlined when off and filled when on,
+   and settings (spec 12.1). */
 .header-button {
   display: grid;
   place-items: center;
@@ -633,6 +645,62 @@ li.highlight {
 .dialog-message:not(:empty) {
   margin-top: 0.5rem;
   padding: 0.625rem 0.875rem;
+}
+
+/* ---------- Settings (spec 12) ---------- */
+
+.segmented {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: none;
+}
+
+/* Looks like the h2 section headings of the main screen. */
+.segmented legend {
+  margin: 0 0 0.5rem 0.25rem;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+}
+
+/* One rounded frame split into equal parts; the chosen part is filled. */
+.segmented-options {
+  display: flex;
+  border: 1px solid var(--color-accent);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.segmented label {
+  /* Shares the free space equally, on top of each label's own text width, so
+     "Automatyczny" still fits on a narrow phone. */
+  flex: 1 1 auto;
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  padding: 0 0.5rem;
+  color: var(--color-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.segmented label + input + label {
+  border-left: 1px solid var(--color-accent);
+}
+
+.segmented input:checked + label {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+/* The input itself is hidden, so its keyboard focus is shown on its label. The
+   frame cuts off an outline, hence a ring drawn inside. */
+.segmented input:focus-visible + label {
+  outline: 3px solid var(--color-text);
+  outline-offset: -5px;
 }
 
 /* ---------- List picker (spec 11.2) ---------- */

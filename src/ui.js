@@ -15,6 +15,7 @@ import { enableDragging } from './drag.js';
 import { startEditing, createHandle, moveWithArrowKeys, findRow } from './list-controls.js';
 import { createManageDialog } from './manage-dialog.js';
 import { createListPicker } from './list-picker.js';
+import { createSettingsDialog } from './settings-dialog.js';
 
 const MESSAGE_DURATION_MS = 5000;
 
@@ -24,7 +25,7 @@ const MESSAGE_DURATION_MS = 5000;
 //             onAddCategory(name), onRenameCategory(categoryId, name),
 //             onRemoveCategory(categoryId), onMoveCategory(categoryId, toIndex),
 //             onSelectList(listId), onAddList(name), onRenameList(listId, name),
-//             onRemoveList(listId), onMoveList(listId, toIndex) }
+//             onRemoveList(listId), onMoveList(listId, toIndex), onChangeTheme(theme) }
 // Returns functions main.js uses to update the screen.
 export function createUI(handlers) {
   const elements = {
@@ -112,6 +113,8 @@ export function createUI(handlers) {
     onMove: handlers.onMoveList,
   });
 
+  const settingsDialog = createSettingsDialog(handlers.onChangeTheme);
+
   elements.wakeLock.addEventListener('click', () => handlers.onToggleWakeLock());
 
   // No confirm() needed: the user can undo with "Cofnij" (spec 3.7 / 3.8).
@@ -191,6 +194,11 @@ export function createUI(handlers) {
     updateWakeLockButton(enabled) {
       elements.wakeLock.hidden = false;
       elements.wakeLock.setAttribute('aria-pressed', String(enabled));
+    },
+
+    // Marks the theme ('light', 'dark' or 'auto') in the settings dialog.
+    showTheme(theme) {
+      settingsDialog.showTheme(theme);
     },
 
     // Used when the user tries to add a product that is already on the list.
